@@ -1,0 +1,85 @@
+package com.example.receipt_backend.security;
+
+import com.example.receipt_backend.entity.Role;
+import com.example.receipt_backend.entity.User;
+import com.example.receipt_backend.repository.RoleRepository;
+import com.example.receipt_backend.repository.UserRepository;
+import com.example.receipt_backend.utils.RoleType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+@Service
+public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Override
+    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        // Log the entire OAuth2UserRequest
+        logger.debug("OAuth2UserRequest: {}", userRequest);
+        logger.debug("Client Registration: {}", userRequest.getClientRegistration());
+        logger.debug("Access Token: {}", userRequest.getAccessToken().getTokenValue());
+        logger.debug("Additional Parameters: {}", userRequest.getAdditionalParameters());
+
+        // Fetch user details from the OAuth2 provider (Google)
+        OAuth2User oAuth2User = super.loadUser(userRequest);
+
+        // Extract email from the user's attributes
+        String email = oAuth2User.getAttribute("email");
+
+        // Log the received attributes for further debugging
+        logger.debug("OAuth2 User Attributes: {}", oAuth2User.getAttributes());
+
+        // Validate that the email is not null (avoid null pointer exceptions)
+        if (email == null) {
+            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
+        }
+
+        // Find the user in the database or register a new user if not found
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> registerNewUser(email, oAuth2User.getAttributes()));
+
+        // Log the registered or found user information
+        logger.debug("User after registration or retrieval: {}", user);
+
+        // Return the OAuth2User with roles and user attributes
+        return new DefaultOAuth2User(
+                user.getAuthorities(),
+                oAuth2User.getAttributes(),
+                "sub" // Adjust the attribute key if needed for your provider
+        );
+    }
+
+    private User registerNewUser(String email, Map<String, Object> attributes) {
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername((String) attributes.getOrDefault("name", email));
+        user.setPassword(""); // No password needed for OAuth2 users
+
+        Set<Role> roles = new HashSet<>();
+        Role userRole = roleRepository.findByName(RoleType.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Role 'ROLE_USER' not found"));
+        roles.add(userRole);
+        user.setRoles(roles);
+
+        logger.debug("Registering new user: {}", user);
+        return userRepository.save(user);
+    }
+}

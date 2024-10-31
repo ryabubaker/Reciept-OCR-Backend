@@ -1,0 +1,88 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/receipt_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  #Mail Config
+  mail:
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: 'true'
+          timeout: '5000'
+          auth: 'true'
+          connectiontimeout: '5000'
+          writetimeout: '5000'
+    host: smtp.gmail.com
+    username: ryabubaker@gmail.com
+    password: hvmt tmpl edwm nrpn # Google Account, Search "App Passwords", generate password
+    port: '587'
+
+  # freemarker config - used for email templates
+  freemarker:
+    template-loader-path: classpath:/mail-templates
+    suffix: .ftl
+
+  # OAuth2
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            clientId: 31208289924-hsjju4lthvnslo9v1thdo22863c840ar.apps.googleusercontent.com
+            clientSecret: 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
+            redirectUri: "http://localhost:8080/oauth2/callback/google"
+            scope: email, profile
+
+          facebook:
+            clientId: <<ClientID>>
+            clientSecret: <<ClientSecret>>
+            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
+            scope: email, public_profile
+# logging config
+logging:
+  level:
+    root: INFO
+    org:
+      springframework:
+        web: DEBUG
+        security: DEBUG
+# App Custom Properties
+myapp:
+
+  appName: spring security OAuth2 and JWT starter example
+  officialCompanyName: XYZ-Company Inc.
+  officialCompanyDomain: http://localhost:8080
+
+  mail:
+    defaultEmailAddress: example@gmail.com
+    verificationCodeExpirationSeconds: 1800 # 30 minutes
+
+  jwt:
+    secretKey: ZgJMpWC8hbevhCFXbO5LYviOJUW8yaCy3QpyW4VRYuexeAgBXLsKSSR1Ca88JMRA
+    isSecretKeyBase64Encoded: false
+    expirationMillis: 3600000
+    shortLivedMillis: 120000
+
+  cors:
+    allowedOrigins: http://localhost:8080,http://localhost:4200
+
+  oauth2:
+    authorizedRedirectOrigins: http://localhost:8080,http://localhost:4200
+
+  defaults:
+    defaultPageStart: 0
+    defaultPageSize: 50

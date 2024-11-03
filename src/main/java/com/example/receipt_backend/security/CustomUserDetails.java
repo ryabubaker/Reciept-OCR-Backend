@@ -1,5 +1,5 @@
 package com.example.receipt_backend.security;
-import com.example.receipt_backend.entity.UserEntity;
+import com.example.receipt_backend.entity.User;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,8 +18,8 @@ public class CustomUserDetails implements OAuth2User, UserDetails {
     private String email;
     private String password;
 
-    private UserEntity userEntity;
-    // refers to UserEntity -> Authorities, Usually defines roles (ROLE_USER, ROLE_ADMIN)
+    private User user;
+    // refers to User -> Authorities, Usually defines roles (ROLE_USER, ROLE_ADMIN)
     private Collection<? extends GrantedAuthority> authorities;
     // permissions or combination of Scope:Permissions e.g. users:full, users:read, profile:full, profile:edit
     // private Map<String, String> permissions;
@@ -29,35 +29,35 @@ public class CustomUserDetails implements OAuth2User, UserDetails {
 
     public CustomUserDetails(String email,
                              String password,
-                             UserEntity userEntity,
+                             User user,
                              Collection<? extends GrantedAuthority> authorities,
                              Map<String, Object> attributes) {
         this.email = email;
         this.password = password;
-        this.userEntity = userEntity;
+        this.user = user;
         this.authorities = authorities;
         this.attributes = attributes;
     }
 
-    public static CustomUserDetails buildFromUserEntity(UserEntity userEntity) {
+    public static CustomUserDetails buildFromUserEntity(User user) {
 
         Collection<? extends GrantedAuthority> grantedAuthorities = AppSecurityUtils
-                .convertRolesSetToGrantedAuthorityList(userEntity.getRoles());
+                .convertRolesSetToGrantedAuthorityList(user.getRoles());
         return new CustomUserDetails(
-                userEntity.getEmail(),
-                userEntity.getPassword(),
-                userEntity,
+                user.getEmail(),
+                user.getPassword(),
+                user,
                 grantedAuthorities,
                 new HashMap<>()
         );
     }
 
 
-    public static CustomUserDetails buildWithAuthAttributesAndAuthorities(UserEntity userEntity,
+    public static CustomUserDetails buildWithAuthAttributesAndAuthorities(User user,
                                                                           Collection<? extends GrantedAuthority> authorities,
                                                                           Map<String, Object> attributes) {
 
-        CustomUserDetails customUserDetails = CustomUserDetails.buildFromUserEntity(userEntity);
+        CustomUserDetails customUserDetails = CustomUserDetails.buildFromUserEntity(user);
         customUserDetails.setAuthorities(authorities);
         customUserDetails.setAttributes(attributes);
         return customUserDetails;
@@ -92,7 +92,7 @@ public class CustomUserDetails implements OAuth2User, UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return this.userEntity.isEmailVerified();
+        return this.user.isEmailVerified();
     }
 
     // Oauth2User fields

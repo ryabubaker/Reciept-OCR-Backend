@@ -1,6 +1,6 @@
 package com.example.receipt_backend.entity.common;
 
-import com.example.receipt_backend.entity.UserEntity;
+import com.example.receipt_backend.entity.User;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
@@ -11,7 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.lang.Nullable;
 
 import jakarta.persistence.*;
-import java.io.Serializable;
+
 import java.time.LocalDateTime;
 
 @MappedSuperclass
@@ -24,7 +24,7 @@ public abstract class AbstractGenericPKAuditableEntity extends AbstractGenericPr
     @CreatedBy
     @ManyToOne
     @JoinColumn(name = "created_by_id")
-    private UserEntity createdBy;
+    private User createdBy;
 
     @Nullable
     @CreatedDate
@@ -35,7 +35,7 @@ public abstract class AbstractGenericPKAuditableEntity extends AbstractGenericPr
     @LastModifiedBy
     @ManyToOne
     @JoinColumn(name = "last_modified_by_id")
-    private UserEntity lastModifiedBy;
+    private User lastModifiedBy;
 
     @Nullable
     @LastModifiedDate

@@ -28,8 +28,8 @@
 //                roleRepository.save(new RoleEntity(RoleType.ROLE_SYSTEM_ADMIN));
 //            }
 //
-//            if (roleRepository.findByName(RoleType.ROLE_DATA_ANALYST).isEmpty()) {
-//                roleRepository.save(new RoleEntity( RoleType.ROLE_DATA_ANALYST));
+//            if (roleRepository.findByName(RoleType.ROLE_DATA_MANAGER).isEmpty()) {
+//                roleRepository.save(new RoleEntity( RoleType.ROLE_DATA_MANAGER));
 //            }
 //        };
 //    }

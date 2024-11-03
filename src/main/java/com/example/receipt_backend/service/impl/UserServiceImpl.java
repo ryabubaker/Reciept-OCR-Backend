@@ -6,7 +6,7 @@ import com.example.receipt_backend.dto.request.ResetPasswordRequestDTO;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.request.VerifyEmailRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
-import com.example.receipt_backend.entity.UserEntity;
+import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.AppExceptionConstants;
 import com.example.receipt_backend.exception.BadRequestException;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
@@ -57,15 +57,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDTO> getAllUsers(Pageable pageable) {
-        Page<UserEntity> pageUserEntities = userRepository.findAll(pageable);
+        Page<User> pageUserEntities = userRepository.findAll(pageable);
         return userMapper.toDtoList(pageUserEntities.getContent());
     }
 
     @Override
     public UserDTO findUserByEmail(String userEmail) {
-        UserEntity userEntity = userRepository.findByEmail(userEmail)
+        User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
-        return userMapper.toDto(userEntity);
+        return userMapper.toDto(user);
     }
 
     @Override
@@ -76,9 +76,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO getUserById(Long id) {
-        UserEntity userEntity = userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
-        return userMapper.toDto(userEntity);
+        return userMapper.toDto(user);
     }
 
     @Override
@@ -91,90 +91,90 @@ public class UserServiceImpl implements UserService {
         if (isFromCustomBasicAuth && requestUserDTO.getPassword() != null) {
             requestUserDTO.setPassword(passwordEncoder.encode(requestUserDTO.getPassword()));
         }
-        UserEntity userEntity = userMapper.toEntity(requestUserDTO);
-        boolean existsByEmail = userRepository.existsByEmail(userEntity.getEmail());
+        User user = userMapper.toEntity(requestUserDTO);
+        boolean existsByEmail = userRepository.existsByEmail(user.getEmail());
         if (existsByEmail) {
             throw new ResourceNotFoundException(AppExceptionConstants.USER_EMAIL_NOT_AVAILABLE);
         }
-        userRepository.save(userEntity);
-        sendVerificationEmail(userEntity.getEmail());
-        return userMapper.toDto(userEntity);
+        userRepository.save(user);
+        sendVerificationEmail(user.getEmail());
+        return userMapper.toDto(user);
     }
 
     @Override
     public UserDTO updateUser(UserDTO reqUserDTO) {
-        UserEntity userEntity = userRepository.findById(reqUserDTO.getId())
+        User user = userRepository.findById(reqUserDTO.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
-        userEntity.setUsername(reqUserDTO.getUsername());
-        userEntity.setImageUrl(reqUserDTO.getImageUrl());
-        userEntity.setPhoneNumber(reqUserDTO.getPhoneNumber());
-        userRepository.save(userEntity);
-        return userMapper.toDto(userEntity);
+        user.setUsername(reqUserDTO.getUsername());
+        user.setImageUrl(reqUserDTO.getImageUrl());
+        user.setPhoneNumber(reqUserDTO.getPhoneNumber());
+        userRepository.save(user);
+        return userMapper.toDto(user);
     }
 
     @Override
 //    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public GenericResponseDTO<Boolean> sendVerificationEmail(String email) {
-        UserEntity userEntity = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
         String verificationCode = AppUtils.generateRandomAlphaNumericString(20);
         long verificationCodeExpirationSeconds = appProperties.getMail().getVerificationCodeExpirationSeconds();
-        userEntity.setVerificationCodeExpiresAt(Instant.now().plusSeconds(verificationCodeExpirationSeconds));
-        userEntity.setVerificationCode(verificationCode);
+        user.setVerificationCodeExpiresAt(Instant.now().plusSeconds(verificationCodeExpirationSeconds));
+        user.setVerificationCode(verificationCode);
         MultiValueMap<String, String> appendQueryParamsToVerificationLink = constructEmailVerificationLinkQueryParams(
-                userEntity.getEmail(), verificationCode, userEntity.getRegisteredProviderName());
-        String fullName = userEntity.getUsername();
+                user.getEmail(), verificationCode, user.getRegisteredProviderName());
+        String fullName = user.getUsername();
         String firstName = fullName.contains(" ") ? fullName.split(" ", 2)[0] : fullName;
-        userRepository.save(userEntity);
-        emailService.sendVerificationEmail(userEntity.getEmail(), firstName, appendQueryParamsToVerificationLink);
+        userRepository.save(user);
+        emailService.sendVerificationEmail(user.getEmail(), firstName, appendQueryParamsToVerificationLink);
         GenericResponseDTO<Boolean> genericResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
         return genericResponseDTO;
     }
 
     @Override
     public GenericResponseDTO<Boolean> sendResetPasswordEmail(ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
-        UserEntity userEntity = userRepository.findByEmail(forgotPasswordRequestDTO.getEmail())
+        User user = userRepository.findByEmail(forgotPasswordRequestDTO.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_EMAIL_NOT_AVAILABLE));
         String forgotPasswordVerCode = AppUtils.generateRandomAlphaNumericString(20);
         long verificationCodeExpirationSeconds = appProperties.getMail().getVerificationCodeExpirationSeconds();
-        userEntity.setVerificationCodeExpiresAt(Instant.now().plusSeconds(verificationCodeExpirationSeconds));
-        userEntity.setVerificationCode(forgotPasswordVerCode);
+        user.setVerificationCodeExpiresAt(Instant.now().plusSeconds(verificationCodeExpirationSeconds));
+        user.setVerificationCode(forgotPasswordVerCode);
         MultiValueMap<String, String> appendQueryParamsToPasswordResetLink = constructPasswordResetLinkQueryParams(
-                userEntity.getEmail(), forgotPasswordVerCode);
-        String fullName = userEntity.getUsername();
+                user.getEmail(), forgotPasswordVerCode);
+        String fullName = user.getUsername();
         String firstName = fullName.contains(" ") ? fullName.split(" ", 2)[0] : fullName;
-        userRepository.save(userEntity);
-        emailService.sendPasswordResetEmail(userEntity.getEmail(), firstName, appendQueryParamsToPasswordResetLink);
+        userRepository.save(user);
+        emailService.sendPasswordResetEmail(user.getEmail(), firstName, appendQueryParamsToPasswordResetLink);
         GenericResponseDTO<Boolean> genericResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
         return genericResponseDTO;
     }
 
     @Override
     public GenericResponseDTO<Boolean> verifyEmailAddress(VerifyEmailRequestDTO verifyEmailRequestDTO) {
-        Optional<UserEntity> optionalUserEntity = userRepository.verifyAndRetrieveEmailVerificationRequestUser(
+        Optional<User> optionalUserEntity = userRepository.verifyAndRetrieveEmailVerificationRequestUser(
                 verifyEmailRequestDTO.getEmail(), verifyEmailRequestDTO.getAuthProviderId(), verifyEmailRequestDTO.getVerificationCode());
-        UserEntity userEntity = optionalUserEntity
+        User user = optionalUserEntity
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.MATCHING_VERIFICATION_RECORD_NOT_FOUND));
-        userEntity.setEmailVerified(Boolean.TRUE);
-        userEntity.setVerificationCodeExpiresAt(null);
-        userEntity.setVerificationCode(null);
-        userRepository.save(userEntity);
-        emailService.sendWelcomeEmail(userEntity.getEmail(), userEntity.getUsername());
+        user.setEmailVerified(Boolean.TRUE);
+        user.setVerificationCodeExpiresAt(null);
+        user.setVerificationCode(null);
+        userRepository.save(user);
+        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
         GenericResponseDTO<Boolean> emailVerifiedResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
         return emailVerifiedResponseDTO;
     }
 
     @Override
     public GenericResponseDTO<Boolean> verifyAndProcessPasswordResetRequest(ResetPasswordRequestDTO resetPasswordRequestDTO) {
-        Optional<UserEntity> optionalUserEntity = userRepository.verifyAndRetrieveForgotPasswordRequestUser(
+        Optional<User> optionalUserEntity = userRepository.verifyAndRetrieveForgotPasswordRequestUser(
                 resetPasswordRequestDTO.getEmail(), SecurityEnums.AuthProviderId.app_custom_authentication, resetPasswordRequestDTO.getForgotPasswordVerCode());
-        UserEntity userEntity = optionalUserEntity
+        User user = optionalUserEntity
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.INVALID_PASSWORD_RESET_REQUEST));
-        userEntity.setVerificationCodeExpiresAt(null);
-        userEntity.setVerificationCode(null);
-        userEntity.setEmailVerified(true);
-        userEntity.setPassword(passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword()));
-        userRepository.save(userEntity);
+        user.setVerificationCodeExpiresAt(null);
+        user.setVerificationCode(null);
+        user.setEmailVerified(true);
+        user.setPassword(passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword()));
+        userRepository.save(user);
         GenericResponseDTO<Boolean> emailVerifiedResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
         return emailVerifiedResponseDTO;
     }
@@ -187,14 +187,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public GenericResponseDTO<Boolean> updatePassword(UpdatePasswordRequestDTO updatePasswordRequest) {
-        UserEntity userEntity = userRepository.findById(updatePasswordRequest.getUserId())
+        User user = userRepository.findById(updatePasswordRequest.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
-        boolean passwordMatches = passwordEncoder.matches(updatePasswordRequest.getOldPassword(), userEntity.getPassword());
+        boolean passwordMatches = passwordEncoder.matches(updatePasswordRequest.getOldPassword(), user.getPassword());
         if (!passwordMatches) {
             throw new BadRequestException(AppExceptionConstants.OLD_PASSWORD_DOESNT_MATCH);
         }
-        userEntity.setPassword(passwordEncoder.encode(updatePasswordRequest.getNewPassword()));
-        userRepository.save(userEntity);
+        user.setPassword(passwordEncoder.encode(updatePasswordRequest.getNewPassword()));
+        userRepository.save(user);
         return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 

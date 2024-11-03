@@ -2,7 +2,7 @@ package com.example.receipt_backend.security;
 
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.entity.RoleEntity;
-import com.example.receipt_backend.entity.UserEntity;
+import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.config.AppProperties;
 import com.example.receipt_backend.utils.AppUtils;
@@ -19,7 +19,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import javax.crypto.SecretKey;
 import java.util.*;
 
 /**
@@ -59,7 +58,7 @@ public class JWTTokenProvider {
 
         String authoritiesJsonValue = AppUtils.toJson(authoritiesSet);
         String attributesJsonValue = AppUtils.toJson(customUserDetails.getAttributes());
-        String userJsonValue = AppUtils.toJson(userMapper.toDto(customUserDetails.getUserEntity()));
+        String userJsonValue = AppUtils.toJson(userMapper.toDto(customUserDetails.getUser()));
 
         // Create a mutable claims map
         Map<String, Object> claimsMap = new HashMap<>();
@@ -92,14 +91,14 @@ public class JWTTokenProvider {
         // Parsing Claims Data
         String email = (String) body.get("email");
         UserDTO userDTO = AppUtils.fromJson(body.get("user").toString(), UserDTO.class);
-        UserEntity userEntity = userMapper.toEntity(userDTO);
+        User user = userMapper.toEntity(userDTO);
         Set<RoleEntity> authoritiesSet = AppUtils.fromJson(body.get("authorities").toString(), (Class<Set<RoleEntity>>) ((Class) Set.class));
         Collection<? extends GrantedAuthority> grantedAuthorities = AppSecurityUtils.convertRolesSetToGrantedAuthorityList(authoritiesSet);
         Map<String, Object> attributes = AppUtils.fromJson(body.get("attributes").toString(), (Class<Map<String, Object>>) (Class) Map.class);
 
         // Setting Principle Object
 
-        CustomUserDetails customUserDetails = CustomUserDetails.buildWithAuthAttributesAndAuthorities(userEntity, grantedAuthorities, attributes);
+        CustomUserDetails customUserDetails = CustomUserDetails.buildWithAuthAttributesAndAuthorities(user, grantedAuthorities, attributes);
         customUserDetails.setAttributes(attributes);
         return new UsernamePasswordAuthenticationToken(customUserDetails, "", customUserDetails.getAuthorities());
     }

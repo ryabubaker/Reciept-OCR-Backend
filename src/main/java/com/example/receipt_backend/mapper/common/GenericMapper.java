@@ -3,11 +3,11 @@ package com.example.receipt_backend.mapper.common;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface GenericMapper<D, E> {
+public interface GenericMapper<D, E, F> {
 
     E toEntity(D dto);
 
-    D toDto(E entity);
+    F toDto(E entity);
 
     default List<E> toEntityList(final List<D> dtos) {
         if (dtos != null) {
@@ -18,7 +18,7 @@ public interface GenericMapper<D, E> {
         return null;
     }
 
-    default List<D> toDtoList(final List<E> entitys) {
+    default List<F> toDtoList(final List<E> entitys) {
         if (entitys != null) {
             return entitys.stream()
                     .map(this::toDto)

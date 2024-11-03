@@ -2,11 +2,9 @@ package com.example.receipt_backend.security.oauth;
 
 
 import com.example.receipt_backend.dto.UserDTO;
-import com.example.receipt_backend.entity.RoleEntity;
-import com.example.receipt_backend.entity.UserEntity;
+import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.repository.RoleRepository;
-import com.example.receipt_backend.security.AppSecurityUtils;
 import com.example.receipt_backend.security.CustomUserDetails;
 import com.example.receipt_backend.security.oauth.common.CustomAbstractOAuth2UserInfo;
 import com.example.receipt_backend.security.oauth.common.OAuth2Util;
@@ -89,8 +87,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         List<GrantedAuthority> grantedAuthorities = oAuth2User.getAuthorities().stream().collect(Collectors.toList());
         grantedAuthorities.add(new SimpleGrantedAuthority(RoleType.ROLE_USER.toString()));
-        UserEntity userEntity = userMapper.toEntity(userDTO);
-        return CustomUserDetails.buildWithAuthAttributesAndAuthorities(userEntity, grantedAuthorities, oAuth2User.getAttributes());
+        User user = userMapper.toEntity(userDTO);
+        return CustomUserDetails.buildWithAuthAttributesAndAuthorities(user, grantedAuthorities, oAuth2User.getAttributes());
     }
 
     private UserDTO registerNewOAuthUser(OAuth2UserRequest oAuth2UserRequest,

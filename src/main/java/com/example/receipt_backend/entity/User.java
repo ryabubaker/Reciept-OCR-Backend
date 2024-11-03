@@ -21,7 +21,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
-public class UserEntity extends AbstractGenericPKAuditableEntity {
+public class User extends AbstractGenericPKAuditableEntity {
 
 
     @Column( name = "username", nullable = false, unique = true)
@@ -45,7 +45,10 @@ public class UserEntity extends AbstractGenericPKAuditableEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<RoleEntity> roles = new HashSet<>();
-
+    
+    @ManyToOne
+    @JoinColumn(name = "tenant_id", referencedColumnName = "id")
+    private Tenant tenant;
 
     @Column(name = "phone_number")
     private String phoneNumber;

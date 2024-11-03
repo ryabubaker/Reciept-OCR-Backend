@@ -10,8 +10,8 @@ public final class AppExceptionConstants {
 
     public static final String UNAUTHORIZED_ACCESS = "Insufficient authorization access";
 
-    // UserEntity Exception
-    public static final String USER_RECORD_NOT_FOUND = "UserEntity doesn't exists";
+    // User Exception
+    public static final String USER_RECORD_NOT_FOUND = "User doesn't exists";
     public static final String USER_EMAIL_NOT_AVAILABLE = "This email isn't available";
     public static final String OLD_PASSWORD_DOESNT_MATCH = "Old and New Password doesn't match";
     public static final String MATCHING_VERIFICATION_RECORD_NOT_FOUND = "Provided verification request doesn't seems correct";

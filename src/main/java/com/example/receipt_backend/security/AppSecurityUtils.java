@@ -4,7 +4,6 @@ import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.utils.RoleType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -101,7 +100,7 @@ public class AppSecurityUtils {
      */
     public static Optional<Long> getCurrentUserId() {
         Optional<Long> optionalUserId = Optional.ofNullable(getCurrentUserPrinciple())
-                .map(customUserDetails -> customUserDetails.getUserEntity())
+                .map(customUserDetails -> customUserDetails.getUser())
                 .map(userEntity -> userEntity.getId());
         return optionalUserId;
     }

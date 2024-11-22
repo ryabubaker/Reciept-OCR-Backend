@@ -12,7 +12,6 @@ import java.util.Map;
 
 @Getter
 @Setter
-// TODO Refactor implementation to support OAuth2 and OIDC
 public class CustomUserDetails implements OAuth2User, UserDetails {
 
     private String email;

@@ -40,13 +40,7 @@ public class UserController {
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
-    // TODO Remove this Method: Registration Functionality Provided from public endpoint in AuthenticationController
-//    @PostMapping
-//    public ResponseEntity<?> createUser(@RequestBody UserDTO userDTO) {
-//        log.info("User API: create user");
-//        UserDTO returnedUserDTO = userService.createUser(userDTO);
-//        return new ResponseEntity<>(returnedUserDTO, HttpStatus.OK);
-//    }
+
 
     @PutMapping
     public ResponseEntity<?> updateUser(@RequestBody UserDTO userDTO) {

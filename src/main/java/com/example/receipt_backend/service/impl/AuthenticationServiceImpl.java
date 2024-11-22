@@ -4,6 +4,7 @@ import com.example.receipt_backend.dto.request.LoginRequestDTO;
 import com.example.receipt_backend.dto.request.RegisterUserRequestDTO;
 import com.example.receipt_backend.dto.response.AuthResponseDTO;
 import com.example.receipt_backend.exception.AppExceptionConstants;
+import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.security.JWTTokenProvider;
 import com.example.receipt_backend.security.oauth.common.SecurityEnums;
 import com.example.receipt_backend.service.AuthenticationService;
@@ -16,19 +17,23 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final JWTTokenProvider jwtTokenProvider;
+    private final UserMapper userMapper;
 
     public AuthenticationServiceImpl(AuthenticationManager authenticationManager,
                                      UserService userService,
-                                     JWTTokenProvider jwtTokenProvider) {
+                                     JWTTokenProvider jwtTokenProvider, UserMapper userMapper) {
         this.authenticationManager = authenticationManager;
         this.userService = userService;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userMapper = userMapper;
     }
 
 
@@ -49,13 +54,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserDTO registerUser(RegisterUserRequestDTO registerUserRequestDTO) {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setEmail(registerUserRequestDTO.getEmail());
-        userDTO.setPassword(registerUserRequestDTO.getPassword());
-        userDTO.setUsername(registerUserRequestDTO.getUsername());
-        userDTO.setRegisteredProviderName(SecurityEnums.AuthProviderId.app_custom_authentication);
-        UserDTO user = userService.createUser(userDTO);
+    public UserDTO registerUser(RegisterUserRequestDTO request) {
+        UserDTO userDTO = userMapper.toUserDTO(request);
+        UserDTO user = userService.createUser(userDTO, request.getTenantId(),request.getRoleType() );
         return user;
     }
 

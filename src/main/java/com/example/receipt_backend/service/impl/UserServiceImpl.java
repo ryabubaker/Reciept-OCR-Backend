@@ -1,23 +1,28 @@
 package com.example.receipt_backend.service.impl;
 
+import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.ForgotPasswordRequestDTO;
 import com.example.receipt_backend.dto.request.ResetPasswordRequestDTO;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.request.VerifyEmailRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
+import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.AppExceptionConstants;
 import com.example.receipt_backend.exception.BadRequestException;
+import com.example.receipt_backend.exception.CustomAppException;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.repository.UserRepository;
 import com.example.receipt_backend.security.oauth.common.SecurityEnums;
+import com.example.receipt_backend.service.TenantSchemaService;
 import com.example.receipt_backend.service.UserService;
 import com.example.receipt_backend.mail.EmailService;
 import com.example.receipt_backend.config.AppProperties;
 import com.example.receipt_backend.utils.AppUtils;
 import com.example.receipt_backend.utils.RoleType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,15 +30,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.ObjectUtils;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -41,18 +44,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final AppProperties appProperties;
-
-    public UserServiceImpl(UserRepository userRepository,
-                           PasswordEncoder passwordEncoder,
-                           UserMapper userMapper,
-                           EmailService emailService,
-                           AppProperties appProperties) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.userMapper = userMapper;
-        this.emailService = emailService;
-        this.appProperties = appProperties;
-    }
+    private final TenantSchemaService tenantSchemaService;
 
 
     @Override
@@ -82,22 +74,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-//    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public UserDTO createUser(UserDTO requestUserDTO) {
-        if (ObjectUtils.isEmpty(requestUserDTO.getRoles())) {
-            requestUserDTO.setRoles(Set.of(RoleType.ROLE_USER.toString()));
+    @Transactional
+    public UserDTO createUser(UserDTO userDto, String tenantId, RoleType roleType) {
+        if (userRepository.existsByEmailAndTenantId(userDto.getEmail(), tenantId)) {
+            throw new CustomAppException("User already exists for this tenant.");
         }
-        boolean isFromCustomBasicAuth = requestUserDTO.getRegisteredProviderName().equals(requestUserDTO.getRegisteredProviderName());
-        if (isFromCustomBasicAuth && requestUserDTO.getPassword() != null) {
-            requestUserDTO.setPassword(passwordEncoder.encode(requestUserDTO.getPassword()));
+
+        CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
+
+        boolean isFromCustomBasicAuth = userDto.getRegisteredProviderName().equals(userDto.getRegisteredProviderName());
+        if (isFromCustomBasicAuth && userDto.getPassword() != null) {
+            userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
-        User user = userMapper.toEntity(requestUserDTO);
-        boolean existsByEmail = userRepository.existsByEmail(user.getEmail());
-        if (existsByEmail) {
-            throw new ResourceNotFoundException(AppExceptionConstants.USER_EMAIL_NOT_AVAILABLE);
-        }
+
+        User user = userMapper.toEntity(userDto);
+        user.setTenantId(tenantId); // Ensure tenantId is set
+        user.setRoles(Collections.singleton(new RoleEntity(roleType)));
+
         userRepository.save(user);
+
         sendVerificationEmail(user.getEmail());
+
         return userMapper.toDto(user);
     }
 

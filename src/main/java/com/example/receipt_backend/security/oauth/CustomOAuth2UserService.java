@@ -1,6 +1,7 @@
 package com.example.receipt_backend.security.oauth;
 
 
+import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.mapper.UserMapper;
@@ -57,6 +58,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest,
                                          OAuth2User oAuth2User) {
+        String tenantId = extractTenantId(oAuth2UserRequest); // Extract tenantId
+        CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
+
         // Mapped OAuth2User to specific CustomAbstractOAuth2UserInfo for that registration id
         // clientRegistrationId - (google, facebook, gitHub, or Custom Auth Provider - ( keyClock, okta, authServer etc.)
         String clientRegistrationId = oAuth2UserRequest.getClientRegistration().getRegistrationId();
@@ -93,6 +97,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private UserDTO registerNewOAuthUser(OAuth2UserRequest oAuth2UserRequest,
                                          CustomAbstractOAuth2UserInfo customAbstractOAuth2UserInfo) {
+        String tenantId = extractTenantId(oAuth2UserRequest);
+
         UserDTO userDTO = new UserDTO();
         userDTO.setUsername(customAbstractOAuth2UserInfo.getName());
         userDTO.setEmail(customAbstractOAuth2UserInfo.getEmail());
@@ -100,8 +106,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         userDTO.setRegisteredProviderId(customAbstractOAuth2UserInfo.getId());
         userDTO.setRoles(Set.of(RoleType.ROLE_USER.toString())); // Use the role name directly
         userDTO.setEmailVerified(true);
-        return userService.createUser(userDTO);
+        userDTO.setTenantId(tenantId);
+        return userService.createUser(userDTO, tenantId, RoleType.ROLE_USER);
     }
+    private String extractTenantId(OAuth2UserRequest oAuth2UserRequest) {
+        // Extract tenantId from additional parameters or headers
+        String tenantId = oAuth2UserRequest.getAdditionalParameters().get("tenantId").toString();
+        if (tenantId == null || tenantId.isEmpty()) {
+            throw new IllegalArgumentException("Missing tenantId in OAuth2 request");
+        }
+        return tenantId;
+    }
+
 
 
     private void updateExistingOAuthUser(UserDTO existingUserDTO,

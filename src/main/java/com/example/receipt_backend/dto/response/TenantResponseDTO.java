@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 
 @Data
-public class CompanyResponseDTO {
+public class TenantResponseDTO {
     private Long id;
     private String name;
     private LocalDateTime createdAt;

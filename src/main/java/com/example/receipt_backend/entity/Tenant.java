@@ -1,29 +1,36 @@
 package com.example.receipt_backend.entity;
 
-import com.example.receipt_backend.entity.common.AbstractGenericPKAuditableEntity;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
-@Data
+@Entity
+@Table(name = "tenants", schema = "public")
+@Getter
+@Setter
 public class Tenant {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String tenantId;
 
-    @Column(unique = true, nullable = false)
-    private String name; // Company name
+    @Column(nullable = false)
+    private String companyName;
 
-    private String contactInfo; // Contact information if needed
-
-    @OneToMany(mappedBy = "tenant")
-    private List<User> users; // List of users belonging to the tenant
-
-    @OneToMany(mappedBy = "tenant")
-    private List<ReceiptTemplate> receiptTemplates; // Templates for receipt formats
+    @Column(nullable = false)
+    private String adminEmail;
 
 
+    public Tenant(String companyName, String adminEmail) {
+        this.tenantId = UUID.randomUUID().toString();  // Generate a unique tenant ID
+        this.companyName = companyName;
+        this.adminEmail = adminEmail;
+    }
 
+    public Tenant() {
 
+    }
 }
+

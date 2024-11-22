@@ -6,6 +6,8 @@ import com.example.receipt_backend.dto.response.AuthResponseDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.service.AuthenticationService;
 import com.example.receipt_backend.service.UserService;
+import com.example.receipt_backend.utils.RoleType;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,10 +35,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterUserRequestDTO registerUserRequestDTO) {
-        log.info("Authentication API: registerUser: ", registerUserRequestDTO.getEmail());
+    public GenericResponseDTO<String> registerUser(@Valid @RequestBody RegisterUserRequestDTO registerUserRequestDTO) {
         UserDTO userDTO = authenticationService.registerUser(registerUserRequestDTO);
-        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        return new GenericResponseDTO<>("Registered Successfully", "200");
     }
 
     @GetMapping("/resend-verification-email")

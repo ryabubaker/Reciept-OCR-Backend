@@ -1,5 +1,6 @@
 package com.example.receipt_backend.security;
 
+import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.User;
@@ -66,6 +67,8 @@ public class JWTTokenProvider {
         claimsMap.put("user", userJsonValue);
         claimsMap.put("authorities", authoritiesJsonValue);
         claimsMap.put("attributes", attributesJsonValue);
+        claimsMap.put("tenant_id", customUserDetails.getUser().getTenantId());
+
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
@@ -87,6 +90,9 @@ public class JWTTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+        // Extract tenantId and set it in the tenant context
+        String tenantId = body.get("tenant", String.class);
+        CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
 
         // Parsing Claims Data
         String email = (String) body.get("email");

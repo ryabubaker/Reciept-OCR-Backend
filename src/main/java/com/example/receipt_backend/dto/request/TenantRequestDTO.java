@@ -3,7 +3,10 @@ import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 
 @Data
-public class CompanyRequestDTO {
+public class TenantRequestDTO {
+    @NotBlank(message = "Tenant ID is required")
+    private String tenantId;
     @NotBlank(message = "Company name is required")
-    private String name;
+    private String companyName;
+    private String adminEmail;
 }

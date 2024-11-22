@@ -33,4 +33,5 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
                                                               @Param("validProviderName") SecurityEnums.AuthProviderId validProviderName,
                                                               @Param("verificationCode") String verificationCode);
 
+    boolean existsByEmailAndTenantId(String email, String tenantId);
 }

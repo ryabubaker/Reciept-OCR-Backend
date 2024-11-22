@@ -5,6 +5,7 @@ import com.example.receipt_backend.dto.request.ResetPasswordRequestDTO;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.request.VerifyEmailRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
+import com.example.receipt_backend.utils.RoleType;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -21,7 +22,9 @@ public interface UserService {
 
     UserDTO getUserById(Long id);
 
-    UserDTO createUser(UserDTO userDTO);
+
+    //    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    UserDTO createUser(UserDTO userDto, String tenantId, RoleType roleType);
 
     UserDTO updateUser(UserDTO userDTO);
 

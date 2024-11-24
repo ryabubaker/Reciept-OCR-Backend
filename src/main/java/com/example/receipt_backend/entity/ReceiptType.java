@@ -25,12 +25,6 @@ public class ReceiptType {
     private Tenant tenant;  // Each format is linked to a tenant
 
 
-    @Column(name = "created_at")
-    private String createdAt;
-
-    @Column(name = "updated_at")
-    private String updatedAt;
-
     // List of dynamic fields for each format (e.g., "totalAmount", "tax")
     @ElementCollection
     private List<String> fields;  // Store dynamic fields (this could be JSON as well)

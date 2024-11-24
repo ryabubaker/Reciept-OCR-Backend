@@ -18,7 +18,7 @@ public class Receipt {
 
     @ManyToOne
     @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;  // Receipt belongs to a company
+    private Tenant tenant;
 
     @ManyToOne
     @JoinColumn(name = "receipt_format_id", nullable = false)

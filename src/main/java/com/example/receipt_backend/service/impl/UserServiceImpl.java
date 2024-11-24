@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<UserDTO> findOptionalUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .map(userEntity -> userMapper.toDto(userEntity));
+                .map(userMapper::toDto);
     }
 
     @Override

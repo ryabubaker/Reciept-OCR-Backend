@@ -90,7 +90,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 
         List<GrantedAuthority> grantedAuthorities = oAuth2User.getAuthorities().stream().collect(Collectors.toList());
-        grantedAuthorities.add(new SimpleGrantedAuthority(RoleType.ROLE_USER.toString()));
+        grantedAuthorities.add(new SimpleGrantedAuthority(RoleType.ROLE_MOBILE_USER.toString()));
         User user = userMapper.toEntity(userDTO);
         return CustomUserDetails.buildWithAuthAttributesAndAuthorities(user, grantedAuthorities, oAuth2User.getAttributes());
     }
@@ -104,10 +104,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         userDTO.setEmail(customAbstractOAuth2UserInfo.getEmail());
         userDTO.setRegisteredProviderName(SecurityEnums.AuthProviderId.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()));
         userDTO.setRegisteredProviderId(customAbstractOAuth2UserInfo.getId());
-        userDTO.setRoles(Set.of(RoleType.ROLE_USER.toString())); // Use the role name directly
+        userDTO.setRoles(Set.of(RoleType.ROLE_MOBILE_USER.toString())); // Use the role name directly
         userDTO.setEmailVerified(true);
         userDTO.setTenantId(tenantId);
-        return userService.createUser(userDTO, tenantId, RoleType.ROLE_USER);
+        return userService.createUser(userDTO, tenantId, RoleType.ROLE_MOBILE_USER);
     }
     private String extractTenantId(OAuth2UserRequest oAuth2UserRequest) {
         // Extract tenantId from additional parameters or headers

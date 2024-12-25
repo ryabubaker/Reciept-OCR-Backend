@@ -1,43 +1,58 @@
 package com.example.receipt_backend.entity;
 
+import com.example.receipt_backend.utils.MapToJsonConverter;
+import com.example.receipt_backend.utils.ReceiptStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Entity
 @Table(name = "receipt")
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+
 public class Receipt {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long receiptId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "receipt_id", updatable = false, nullable = false)
+    private UUID receiptId;
 
+    @Setter
     @ManyToOne
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
+    @JoinColumn(name = "request_id")
+    private UploadRequest request;
 
-    @ManyToOne
-    @JoinColumn(name = "receipt_format_id", nullable = false)
-    private ReceiptType receiptType;  // Receipt follows a specific format
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receipt_type_id", nullable = false)
+    private ReceiptType receiptType;
 
-    private String receiptImageUrl;  // URL of the uploaded image
+    @Column(name = "image_url", nullable = false)
+    private String imageUrl;
 
-    @Column(name = "uploaded_at")
-    private String uploadedAt;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ReceiptStatus status = ReceiptStatus.PENDING;
 
-    // OCR data stored as a JSON map, could include dynamic keys (e.g., "totalAmount", "vendorName")
-    @ElementCollection
-    @CollectionTable(name = "ocr_data", joinColumns = @JoinColumn(name = "receipt_id"))
-    @MapKeyColumn(name = "data_key")
-    @Column(name = "data_value")
+    @Convert(converter = MapToJsonConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "ocr_data", columnDefinition = "jsonb")
     private Map<String, String> ocrData;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;  // User who uploaded the receipt
-}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by_user_id")
+    private User approvedBy;
 
+    @Column(name = "approved_at", columnDefinition = "TIMESTAMP")
+    private LocalDateTime approvedAt;
+
+}

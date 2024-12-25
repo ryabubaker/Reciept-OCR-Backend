@@ -1,7 +1,9 @@
 package com.example.receipt_backend.repository;
 
 import com.example.receipt_backend.entity.User;
-import com.example.receipt_backend.security.oauth.common.SecurityEnums;
+import com.example.receipt_backend.security.SecurityEnums;
+import com.example.receipt_backend.utils.RoleType;
+import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -10,9 +12,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
 
     @EntityGraph(attributePaths = "roles", type = EntityGraph.EntityGraphType.LOAD)
     Optional<User> findByEmail(String email);
@@ -33,5 +36,14 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
                                                               @Param("validProviderName") SecurityEnums.AuthProviderId validProviderName,
                                                               @Param("verificationCode") String verificationCode);
 
-    boolean existsByEmailAndTenantId(String email, String tenantId);
+    boolean existsByEmailAndTenant_TenantId(String email, UUID tenantId);
+
+    @NonNull
+    Optional<User> findById(@NonNull UUID id);
+
+    Optional<User> findByUsername(String username);
+
+    boolean existsByRoles_Name(RoleType roleType);
+
+    boolean existsByEmailAndTenant_TenantName(String adminEmail, String tenantName);
 }

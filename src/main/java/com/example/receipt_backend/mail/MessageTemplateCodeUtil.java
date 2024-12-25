@@ -13,7 +13,8 @@ public class MessageTemplateCodeUtil {
     public enum TemplatesPath {
         WELCOME_MAIL("/welcome.ftlh"),
         EMAIL_VERIFICATION_MAIL("/verification-code.ftlh"),
-        RESET_PASSWORD_MAIL("/reset-password.ftlh");
+        RESET_PASSWORD_MAIL("/reset-password.ftlh"),
+        WELCOME_PASSWORD_MAIL("/admin.ftlh");
 
         private String templatePath;
 
@@ -34,16 +35,19 @@ public class MessageTemplateCodeUtil {
         public static final String REGCompanyPhone = "REGCompanyPhone";
 
         // Welcome user template Keys
-        public static final String welcomedUserFirstName = "firstName";
+        public static final String welcomedUserName = "userName";
         public static final String setupItemList = "setupItemList";
         public static final String visitOfficialSite = "visitOfficialSite";
 
         // Verification code template Keys
-        public static final String verificationUserFirstName = "firstName";
+        public static final String verificationUserName = "firstName";
         public static final String linkEmailVerification = "linkEmailVerification";
 
         // Password reset template keys
         public static final String linkPasswordReset = "linkPasswordReset";
+
+        // Admin login template keys
+        public static final String adminPassword = "password";
 
     }
 

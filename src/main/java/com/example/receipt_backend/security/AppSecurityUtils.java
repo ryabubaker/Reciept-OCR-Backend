@@ -1,20 +1,19 @@
 package com.example.receipt_backend.security;
 
 import com.example.receipt_backend.entity.RoleEntity;
-import com.example.receipt_backend.utils.RoleType;
+import com.example.receipt_backend.entity.common.AbstractGenericPrimaryKey;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AppSecurityUtils {
 
-
+    public static final String ROLE_DEFAULT = "ROLE_DEFAULT";
 
     /**
      * Converts list of roles into Collection of GrantedAuthority
@@ -22,21 +21,11 @@ public class AppSecurityUtils {
      * @param roles
      * @return Collection<? extends GrantedAuthority>
      */
-    public static Collection<? extends GrantedAuthority> convertRolesSetToGrantedAuthorityList(Set<RoleEntity> roles) {
-        Collection<GrantedAuthority> authorities = new HashSet<>();
-        for (RoleEntity role : roles) {
-            String roleName = role.getName().toString();
-
-            // Check if the role is OAUTH2_USER and replace it with ROLE_USER
-            if ("OAUTH2_USER".equals(roleName)) {
-                authorities.add(new SimpleGrantedAuthority(RoleType.ROLE_USER.toString()));
-            } else {
-                authorities.add(new SimpleGrantedAuthority(roleName));
-            }
-        }
-        return authorities;
+    public static List<GrantedAuthority> convertRolesSetToGrantedAuthorityList(Set<RoleEntity> roles) {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName().toString()))
+                .collect(Collectors.toList());
     }
-
 
     /**
      * Converts Collection of GrantedAuthority into list of roles
@@ -44,29 +33,10 @@ public class AppSecurityUtils {
      * @param grantedAuthorities
      * @return Set<String>
      */
-    public static Set<RoleEntity> convertGrantedAuthorityListToRolesSet(Collection<? extends GrantedAuthority> grantedAuthorities) {
-        Set<RoleEntity> roles = new HashSet<>();
-        for (GrantedAuthority grantedAuthority : grantedAuthorities) {
-
-            String authority = grantedAuthority.getAuthority();
-
-            // Skip scope-based authorities
-            if (authority.startsWith("SCOPE_")) {
-                continue;
-            }
-
-            RoleEntity roleEntity = new RoleEntity();
-            // Map OAUTH2_USER to ROLE_USER
-            if ("OAUTH2_USER".equals(authority)) {
-                roleEntity.setName(RoleType.ROLE_USER);
-            } else {
-                roleEntity.setName(RoleType.valueOf(authority));
-            }
-            roles.add(roleEntity);
-        }
+    public static Set<String> convertGrantedAuthorityListToRolesSet(Collection<? extends GrantedAuthority> grantedAuthorities) {
+        Set<String> roles = AuthorityUtils.authorityListToSet(grantedAuthorities);
         return roles;
     }
-
 
     /**
      * Get Authentication object from SecurityContextHolder
@@ -98,11 +68,10 @@ public class AppSecurityUtils {
      *
      * @return Long - user id
      */
-    public static Optional<Long> getCurrentUserId() {
-        Optional<Long> optionalUserId = Optional.ofNullable(getCurrentUserPrinciple())
-                .map(customUserDetails -> customUserDetails.getUser())
-                .map(userEntity -> userEntity.getId());
-        return optionalUserId;
+    public static Optional<UUID> getCurrentUserId() {
+        return Optional.ofNullable(getCurrentUserPrinciple())
+                .map(CustomUserDetails::getUser)
+                .map(AbstractGenericPrimaryKey::getId);
     }
 
 
@@ -115,7 +84,7 @@ public class AppSecurityUtils {
         Authentication authentication = getAuthenticationObject();
         if (authentication != null) {
             return authentication.getAuthorities().stream()
-                    .noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(RoleType.ROLE_USER));
+                    .noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(AppSecurityUtils.ROLE_DEFAULT));
         }
         return false;
     }

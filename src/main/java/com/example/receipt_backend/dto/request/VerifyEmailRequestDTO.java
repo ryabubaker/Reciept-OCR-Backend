@@ -1,6 +1,6 @@
 package com.example.receipt_backend.dto.request;
 
-import com.example.receipt_backend.security.oauth.common.SecurityEnums;
+import com.example.receipt_backend.security.SecurityEnums;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 

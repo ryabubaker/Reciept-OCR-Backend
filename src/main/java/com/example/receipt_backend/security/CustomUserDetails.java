@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -16,9 +17,8 @@ public class CustomUserDetails implements OAuth2User, UserDetails {
 
     private String email;
     private String password;
-
     private User user;
-    // refers to User -> Authorities, Usually defines roles (ROLE_USER, ROLE_ADMIN)
+    // refers to User -> Authorities, Usually defines roles
     private Collection<? extends GrantedAuthority> authorities;
     // permissions or combination of Scope:Permissions e.g. users:full, users:read, profile:full, profile:edit
     // private Map<String, String> permissions;
@@ -61,6 +61,7 @@ public class CustomUserDetails implements OAuth2User, UserDetails {
         customUserDetails.setAttributes(attributes);
         return customUserDetails;
     }
+
 
 
     // UserDetails fields

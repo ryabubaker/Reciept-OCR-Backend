@@ -38,7 +38,7 @@ public class HibernateConfig {
 
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource);
-        em.setPackagesToScan("com.example*");
+        em.setPackagesToScan("com.example.receipt_backend.entity");
         em.setJpaVendorAdapter(this.jpaVendorAdapter());
         em.setJpaPropertyMap(jpaPropertiesMap);
         return em;

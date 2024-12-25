@@ -1,7 +1,8 @@
 package com.example.receipt_backend.entity;
 
 import com.example.receipt_backend.entity.common.AbstractGenericPKAuditableEntity;
-import com.example.receipt_backend.security.oauth.common.SecurityEnums;
+import com.example.receipt_backend.security.SecurityEnums;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
@@ -23,11 +24,10 @@ import lombok.Setter;
 @Table(name = "users", schema = "public")
 public class User extends AbstractGenericPKAuditableEntity {
 
-
-    @Column( name = "username", nullable = false, unique = true)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    @JsonProperty( value = "password", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty(value = "password", access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     // TODO @Email Validation
@@ -40,14 +40,19 @@ public class User extends AbstractGenericPKAuditableEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable(name = "user_roles",
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinTable(
+            name = "user_roles",
+            schema = "public", // Specify the schema explicitly
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<RoleEntity> roles = new HashSet<>();
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<RoleEntity> roles;
 
 
-    private String tenantId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = true)
+    private Tenant tenant;
 
     @Column(name = "phone_number")
     private String phoneNumber;

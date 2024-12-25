@@ -5,11 +5,13 @@ import com.example.receipt_backend.dto.request.ResetPasswordRequestDTO;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.request.VerifyEmailRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
+import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.utils.RoleType;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface UserService {
 
@@ -20,11 +22,10 @@ public interface UserService {
 
     Optional<UserDTO> findOptionalUserByEmail(String email);
 
-    UserDTO getUserById(Long id);
+    UserDTO getUserById(UUID id);
 
 
-    //    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    UserDTO createUser(UserDTO userDto, String tenantId, RoleType roleType);
+    User createUser(UserDTO userDto, String tenantId, RoleType roleType);
 
     UserDTO updateUser(UserDTO userDTO);
 

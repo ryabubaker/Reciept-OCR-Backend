@@ -1,7 +1,7 @@
 package com.example.receipt_backend.dto;
 
 
-import com.example.receipt_backend.security.oauth.common.SecurityEnums;
+import com.example.receipt_backend.security.SecurityEnums;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -17,7 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserDTO {
 
-    private Long id;
+    private UUID id;
     private String tenantId;
 
     private String username;

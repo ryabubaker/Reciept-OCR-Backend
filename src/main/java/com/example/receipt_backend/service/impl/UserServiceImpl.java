@@ -1,28 +1,28 @@
 package com.example.receipt_backend.service.impl;
 
-import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.ForgotPasswordRequestDTO;
 import com.example.receipt_backend.dto.request.ResetPasswordRequestDTO;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.request.VerifyEmailRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
-import com.example.receipt_backend.entity.RoleEntity;
+import com.example.receipt_backend.entity.Tenant;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.AppExceptionConstants;
 import com.example.receipt_backend.exception.BadRequestException;
 import com.example.receipt_backend.exception.CustomAppException;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.UserMapper;
+import com.example.receipt_backend.repository.RoleRepository;
+import com.example.receipt_backend.repository.TenantRepository;
 import com.example.receipt_backend.repository.UserRepository;
-import com.example.receipt_backend.security.oauth.common.SecurityEnums;
-import com.example.receipt_backend.service.TenantSchemaService;
+import com.example.receipt_backend.security.SecurityEnums;
 import com.example.receipt_backend.service.UserService;
 import com.example.receipt_backend.mail.EmailService;
 import com.example.receipt_backend.config.AppProperties;
 import com.example.receipt_backend.utils.AppUtils;
 import com.example.receipt_backend.utils.RoleType;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,13 +30,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
 
 import java.time.Instant;
 import java.util.*;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -44,7 +45,8 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final AppProperties appProperties;
-    private final TenantSchemaService tenantSchemaService;
+    private TenantRepository tenantRepository;
+    private RoleRepository roleRepository;
 
 
     @Override
@@ -67,7 +69,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO getUserById(Long id) {
+    public UserDTO getUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
         return userMapper.toDto(user);
@@ -75,36 +77,41 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDTO createUser(UserDTO userDto, String tenantId, RoleType roleType) {
-        if (userRepository.existsByEmailAndTenantId(userDto.getEmail(), tenantId)) {
+    public User createUser(UserDTO userDto, String tenantId, RoleType roleType) {
+        if (userRepository.existsByEmailAndTenant_TenantId(userDto.getEmail(), UUID.fromString(tenantId))) {
             throw new CustomAppException("User already exists for this tenant.");
         }
-
-        CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
-
-        boolean isFromCustomBasicAuth = userDto.getRegisteredProviderName().equals(userDto.getRegisteredProviderName());
+        boolean isFromCustomBasicAuth = SecurityEnums.AuthProviderId.local.equals(userDto.getRegisteredProviderName());
         if (isFromCustomBasicAuth && userDto.getPassword() != null) {
             userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
 
+        if (ObjectUtils.isEmpty(userDto.getRoles())) {
+            userDto.setRoles(Set.of(roleType.toString()));
+        }
+
         User user = userMapper.toEntity(userDto);
-        user.setTenantId(tenantId); // Ensure tenantId is set
-        user.setRoles(Collections.singleton(new RoleEntity(roleType)));
+
+        Tenant tenant = tenantRepository.findByTenantId(UUID.fromString(tenantId))
+                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.TENANT_NOT_FOUND));
+
+        user.setTenant(tenant);
 
         userRepository.save(user);
 
-        sendVerificationEmail(user.getEmail());
+        if (!user.isEmailVerified()){
+            sendVerificationEmail(user.getEmail());
+        }
 
-        return userMapper.toDto(user);
+        return user;
     }
 
     @Override
     public UserDTO updateUser(UserDTO reqUserDTO) {
         User user = userRepository.findById(reqUserDTO.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
-        user.setUsername(reqUserDTO.getUsername());
-        user.setImageUrl(reqUserDTO.getImageUrl());
-        user.setPhoneNumber(reqUserDTO.getPhoneNumber());
+
+        userMapper.updateEntity(reqUserDTO, user);
         userRepository.save(user);
         return userMapper.toDto(user);
     }
@@ -164,7 +171,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public GenericResponseDTO<Boolean> verifyAndProcessPasswordResetRequest(ResetPasswordRequestDTO resetPasswordRequestDTO) {
         Optional<User> optionalUserEntity = userRepository.verifyAndRetrieveForgotPasswordRequestUser(
-                resetPasswordRequestDTO.getEmail(), SecurityEnums.AuthProviderId.app_custom_authentication, resetPasswordRequestDTO.getForgotPasswordVerCode());
+                resetPasswordRequestDTO.getEmail(), SecurityEnums.AuthProviderId.local, resetPasswordRequestDTO.getForgotPasswordVerCode());
         User user = optionalUserEntity
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.INVALID_PASSWORD_RESET_REQUEST));
         user.setVerificationCodeExpiresAt(null);
@@ -194,6 +201,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
+
 
     private static MultiValueMap<String, String> constructEmailVerificationLinkQueryParams(String email,
                                                                                            String verificationCode,

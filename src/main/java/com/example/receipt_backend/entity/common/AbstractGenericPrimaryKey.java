@@ -8,6 +8,7 @@ import org.springframework.lang.Nullable;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 
 @MappedSuperclass
@@ -18,6 +19,6 @@ public abstract class AbstractGenericPrimaryKey {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private Long id;
+    private UUID id;
 
 }

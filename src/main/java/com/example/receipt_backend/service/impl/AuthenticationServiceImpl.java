@@ -1,63 +1,73 @@
 package com.example.receipt_backend.service.impl;
+
+import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.LoginRequestDTO;
 import com.example.receipt_backend.dto.request.RegisterUserRequestDTO;
 import com.example.receipt_backend.dto.response.AuthResponseDTO;
-import com.example.receipt_backend.exception.AppExceptionConstants;
+import com.example.receipt_backend.entity.RoleEntity;
+import com.example.receipt_backend.entity.Tenant;
+import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.mapper.UserMapper;
-import com.example.receipt_backend.security.JWTTokenProvider;
-import com.example.receipt_backend.security.oauth.common.SecurityEnums;
+import com.example.receipt_backend.repository.RoleRepository;
+import com.example.receipt_backend.repository.TenantRepository;
+import com.example.receipt_backend.repository.UserRepository;
+import com.example.receipt_backend.security.CustomUserDetails;
+import com.example.receipt_backend.security.JwtUtils;
 import com.example.receipt_backend.service.AuthenticationService;
 import com.example.receipt_backend.service.UserService;
+import com.example.receipt_backend.utils.RoleType;
+import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
+import java.util.*;
 
 @Service
+@Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
-    private final UserService userService;
-    private final JWTTokenProvider jwtTokenProvider;
+
     private final UserMapper userMapper;
 
-    public AuthenticationServiceImpl(AuthenticationManager authenticationManager,
-                                     UserService userService,
-                                     JWTTokenProvider jwtTokenProvider, UserMapper userMapper) {
+    private final JwtUtils jwtUtils;
+    private final UserService userService;
+
+    public AuthenticationServiceImpl(AuthenticationManager authenticationManager, UserMapper userMapper, JwtUtils jwtUtils, UserService userService) {
         this.authenticationManager = authenticationManager;
-        this.userService = userService;
-        this.jwtTokenProvider = jwtTokenProvider;
         this.userMapper = userMapper;
-    }
-
-
-    @Override
-    public AuthResponseDTO loginUser(LoginRequestDTO loginRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-            String token = jwtTokenProvider.createJWTToken(authentication);
-            AuthResponseDTO authResponseDTO = new AuthResponseDTO();
-            authResponseDTO.setToken(token);
-            return authResponseDTO;
-        } catch (AuthenticationException e) {
-            if (e instanceof DisabledException) {
-                throw new BadCredentialsException(AppExceptionConstants.ACCOUNT_NOT_ACTIVATED);
-            }
-            throw new BadCredentialsException(e.getMessage());
-        }
+        this.jwtUtils = jwtUtils;
+        this.userService = userService;
     }
 
     @Override
     public UserDTO registerUser(RegisterUserRequestDTO request) {
         UserDTO userDTO = userMapper.toUserDTO(request);
-        UserDTO user = userService.createUser(userDTO, request.getTenantId(),request.getRoleType() );
-        return user;
+        User user = userService.createUser(userDTO, request.getTenantId(), request.getRoleType());
+        return userMapper.toDto(user);
     }
+    @Override
+    @Transactional
+    public AuthResponseDTO loginUser(LoginRequestDTO loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String jwtToken = jwtUtils.generateJwtToken(userDetails);
+        AuthResponseDTO auth = new AuthResponseDTO(jwtToken);
+
+        return auth;
+    }
 }

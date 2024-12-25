@@ -9,12 +9,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Setter @Getter @AllArgsConstructor
+import java.io.Serial;
+import java.io.Serializable;
+
+@Setter
+@Getter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "roles")
-public class RoleEntity extends AbstractGenericPrimaryKey {
-
+@Table(name = "roles", schema = "public")
+public class RoleEntity extends AbstractGenericPrimaryKey implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 30)

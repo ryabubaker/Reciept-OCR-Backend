@@ -1,24 +1,38 @@
 package com.example.receipt_backend.service;
 
 import com.example.receipt_backend.dto.ReceiptDTO;
+import com.example.receipt_backend.dto.request.QueryDTO;
+import com.example.receipt_backend.dto.request.UploadRequestDTO;
+import com.example.receipt_backend.dto.response.UploadResponseDTO;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public interface ReceiptService {
-    @Transactional
-    ReceiptDTO uploadReceipt(MultipartFile file, Long receiptFormatId);
 
-
-    List<ReceiptDTO> getImageHistory(Long userId, Long tenantId, Pageable pageable);
-
-    ReceiptDTO getImageDetails(Long receiptId);
 
     @Transactional
-    ReceiptDTO updateImage(Long receiptId, MultipartFile file);
+    void uploadReceipts(UploadRequestDTO requestDTO);
 
     @Transactional
-    void deleteImage(Long receiptId);
+    void confirmReceipt(UUID receiptId);
+
+    @Transactional
+    UploadResponseDTO getRequestById(UUID requestId);
+
+    ReceiptDTO getReceiptDetails(UUID receiptId);
+
+    @Transactional
+    ReceiptDTO updateOcrData(UUID receiptId, Map<String, String> updatedOcrData);
+
+    Page<UploadResponseDTO> getPendingRequests(Pageable pageable);
+
+    @Transactional
+    void deleteReceipt(UUID receiptId);
+
+    @Transactional
+    Page<ReceiptDTO> listReceipts(QueryDTO requestDTO);
 }

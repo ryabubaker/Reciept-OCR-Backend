@@ -3,12 +3,12 @@ package com.example.receipt_backend.config.multitenant;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 @Component
 public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionProvider<String> {
@@ -30,12 +30,11 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
         connection.close();
     }
 
-
     @Override
     public Connection getConnection(String tenantIdentifier) throws SQLException {
-        logger.info("Get connection for tenant {}", tenantIdentifier);
+        logger.info("Get connection for  {}", tenantIdentifier);
         final Connection connection = getAnyConnection();
-        connection.setSchema(tenantIdentifier);
+        executeSchemaSwitch(connection, tenantIdentifier);
         return connection;
     }
 
@@ -43,8 +42,22 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
     public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
         logger.info("Release connection for tenant {}", tenantIdentifier);
         String DEFAULT_TENANT = "public";
-        connection.setSchema(DEFAULT_TENANT);
+        executeSchemaSwitch(connection, DEFAULT_TENANT);
         releaseAnyConnection(connection);
+    }
+
+    private void executeSchemaSwitch(Connection connection, String schemaName) throws SQLException {
+        Statement statement = null;
+        try {
+            statement = connection.createStatement();
+            statement.execute("SET SCHEMA '" + schemaName + "'");
+            logger.info("Switched schema to {}", schemaName);
+        } finally {
+            if (statement != null) {
+                statement.close();
+                logger.info("");
+            }
+        }
     }
 
     @Override

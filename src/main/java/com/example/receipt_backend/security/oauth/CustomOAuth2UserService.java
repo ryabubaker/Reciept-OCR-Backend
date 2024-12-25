@@ -3,17 +3,20 @@ package com.example.receipt_backend.security.oauth;
 
 import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
+import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.User;
+import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.repository.RoleRepository;
 import com.example.receipt_backend.security.CustomUserDetails;
+import com.example.receipt_backend.security.SecurityEnums;
 import com.example.receipt_backend.security.oauth.common.CustomAbstractOAuth2UserInfo;
 import com.example.receipt_backend.security.oauth.common.OAuth2Util;
-import com.example.receipt_backend.security.oauth.common.SecurityEnums;
 import com.example.receipt_backend.service.UserService;
 import com.example.receipt_backend.utils.RoleType;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,25 +28,22 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 
 @Service
+@AllArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private RoleRepository roleRepository;
+    private final UserService userService;
+    private final UserMapper userMapper;
+    private final RoleRepository roleRepository;
 
     @Override
+    @Transactional
     public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(oAuth2UserRequest);
 
@@ -58,11 +58,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest,
                                          OAuth2User oAuth2User) {
-        String tenantId = extractTenantId(oAuth2UserRequest); // Extract tenantId
-        CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
-
-        // Mapped OAuth2User to specific CustomAbstractOAuth2UserInfo for that registration id
-        // clientRegistrationId - (google, facebook, gitHub, or Custom Auth Provider - ( keyClock, okta, authServer etc.)
         String clientRegistrationId = oAuth2UserRequest.getClientRegistration().getRegistrationId();
         CustomAbstractOAuth2UserInfo customAbstractOAuth2UserInfo = OAuth2Util.getOAuth2UserInfo(clientRegistrationId, oAuth2User.getAttributes());
 
@@ -72,6 +67,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if (!StringUtils.hasText(userEmail)) {
             throw new InternalAuthenticationServiceException("Sorry, Couldn't retrieve your email from Provider " + clientRegistrationId + ". Email not available or Private by default");
         }
+
+        // Set tenantId for the current request context
+        String tenantId = extractTenantId(oAuth2UserRequest); // Extract tenantId
+        CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
 
         // Determine is this [ Login ] or [ New Sign up ]
         // Sign In (email will be present in our database)  OR Sign Up ( if don't have user email, we need to register user, and save email into db)
@@ -90,7 +89,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 
         List<GrantedAuthority> grantedAuthorities = oAuth2User.getAuthorities().stream().collect(Collectors.toList());
-        grantedAuthorities.add(new SimpleGrantedAuthority(RoleType.ROLE_MOBILE_USER.toString()));
+        grantedAuthorities.add(new SimpleGrantedAuthority(getUserRoleBasedOnRequest().toString()));
         User user = userMapper.toEntity(userDTO);
         return CustomUserDetails.buildWithAuthAttributesAndAuthorities(user, grantedAuthorities, oAuth2User.getAttributes());
     }
@@ -104,10 +103,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         userDTO.setEmail(customAbstractOAuth2UserInfo.getEmail());
         userDTO.setRegisteredProviderName(SecurityEnums.AuthProviderId.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()));
         userDTO.setRegisteredProviderId(customAbstractOAuth2UserInfo.getId());
-        userDTO.setRoles(Set.of(RoleType.ROLE_MOBILE_USER.toString())); // Use the role name directly
+        userDTO.setRoles(Collections.singleton(getUserRoleBasedOnRequest().getName().toString()));
         userDTO.setEmailVerified(true);
         userDTO.setTenantId(tenantId);
-        return userService.createUser(userDTO, tenantId, RoleType.ROLE_MOBILE_USER);
+        User user = userService.createUser(userDTO, tenantId, RoleType.ROLE_MOBILE_USER);
+        return userMapper.toDto(user);
     }
     private String extractTenantId(OAuth2UserRequest oAuth2UserRequest) {
         // Extract tenantId from additional parameters or headers
@@ -126,6 +126,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         existingUserDTO.setImageUrl(customAbstractOAuth2UserInfo.getImageUrl());
         UserDTO updatedUserDTO = userService.updateUser(existingUserDTO);
         BeanUtils.copyProperties(updatedUserDTO, existingUserDTO);
+    }
+
+    private RoleEntity getUserRoleBasedOnRequest() {
+//        String userAgent = request.getHeader("User-Agent");
+        RoleEntity roleEntity= new RoleEntity() ; // Placeholder for the actual role retrieval logic
+//
+//        if (userAgent != null && userAgent.toLowerCase().contains("mobile")) {
+//            // Assign the mobile user role
+//            roleEntity = roleRepository.findByName(RoleType.ROLE_MOBILE_USER)
+//                    .orElseThrow(() -> new ResourceNotFoundException("ROLE_MOBILE_USER not found"));
+//        } else {
+//            // Assign the desktop user role
+//            roleEntity = roleRepository.findByName(RoleType.ROLE_DESKTOP_USER)
+//                    .orElseThrow(() -> new ResourceNotFoundException("ROLE_DESKTOP_USER not found"));
+//        }
+        return roleEntity;
     }
 
 }

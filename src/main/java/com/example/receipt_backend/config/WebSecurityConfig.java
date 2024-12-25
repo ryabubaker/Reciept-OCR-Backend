@@ -1,96 +1,75 @@
 package com.example.receipt_backend.config;
 
-import com.example.receipt_backend.security.CustomAuthenticationEntryPoint;
-import com.example.receipt_backend.security.JWTAuthenticationFilter;
-import com.example.receipt_backend.security.TenantFilter;
+import com.example.receipt_backend.security.AuthEntryPointJwt;
+import com.example.receipt_backend.security.JwtAuthenticationFilter;
+import com.example.receipt_backend.security.TenantLoggingFilter;
 import com.example.receipt_backend.security.UserDetailsServiceImpl;
-import com.example.receipt_backend.security.oauth.CustomOAuth2UserService;
-import com.example.receipt_backend.security.oauth.OAuth2AuthenticationFailureHandler;
-import com.example.receipt_backend.security.oauth.OAuth2AuthenticationSuccessHandler;
+import com.example.receipt_backend.security.oauth.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(
-        securedEnabled = true,
-        jsr250Enabled = true,
-        prePostEnabled = true
-)
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
-    // CustomUserDetailsService - To process custom user SignUp/SignIn request
-    // CustomOAuth2UserService - To process OAuth user SignUp/SignIn request
-    private final UserDetailsServiceImpl customUserDetailsService;
-    private final CustomOAuth2UserService customOAuth2UserService;
+
+    private final AuthEntryPointJwt unauthorizedHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final PasswordEncoder passwordEncoder;
-
-    // CustomAuthenticationEntryPoint - Unauthorized Access handler
-    // JWTAuthenticationFilter - Retrieves request JWT token and, validate and set Authentication
-    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-    private final JWTAuthenticationFilter jwtAuthenticationFilter;
-
-    // OAuth2 Success and Failure Handler
-    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-
-    private final TenantFilter tenantFilter;
-
-
+    private final UserDetailsServiceImpl customUserDetailsService;
+    private final TenantLoggingFilter tenantLoggingFilter;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(withDefaults())
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(customAuthenticationEntryPoint))
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(unauthorizedHandler ))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/oauth2/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(authorization -> authorization
-                                .baseUri("/oauth2/authorize"))
-                        .redirectionEndpoint(redirection -> redirection
-                                .baseUri("/oauth2/callback/*"))
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))
-                        .successHandler(oAuth2AuthenticationSuccessHandler)
-                        .failureHandler(oAuth2AuthenticationFailureHandler))
-        ;
+                .oauth2Login(
+                        oauth2 -> oauth2
 
-        http.addFilterBefore(tenantFilter, JWTAuthenticationFilter.class);
+                               .authorizationEndpoint(authorization -> authorization
+                                       .baseUri("/oauth2/authorize"))
+                               .redirectionEndpoint(redirection -> redirection
+                                       .baseUri("/oauth2/redirect"))
+                                .successHandler(oAuth2SuccessHandler)
+                );
+        http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
+        http.addFilterBefore(tenantLoggingFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder
-                .userDetailsService(customUserDetailsService)
-                .passwordEncoder(passwordEncoder);
-        return authenticationManagerBuilder.build();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
-
-
-
-
-
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
+    }
 }

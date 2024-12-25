@@ -1,9 +1,6 @@
 package com.example.receipt_backend.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
-@ResponseStatus(HttpStatus.BAD_REQUEST)
+// Bad Request Exception for invalid requests
 public class BadRequestException extends RuntimeException {
     public BadRequestException(String message) {
         super(message);

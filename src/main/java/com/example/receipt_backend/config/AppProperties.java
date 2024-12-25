@@ -1,5 +1,6 @@
 package com.example.receipt_backend.config;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,13 @@ public class AppProperties {
 
     // Custom Defaults App/Web/Rest/Misc Properties
     private Defaults defaults = new Defaults();
+    private SystemAdmin systemAdmin = new SystemAdmin();
+
+    @Data
+    public static class SystemAdmin {
+        private String email;
+        private String password;
+    }
 
     @Getter
     @Setter

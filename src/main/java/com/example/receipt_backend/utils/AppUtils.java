@@ -17,6 +17,7 @@ public class AppUtils {
 
     public AppUtils(ObjectMapper objectMapper) {
         AppUtils.objectMapper = objectMapper;
+        MapToJsonConverter.setObjectMapper(objectMapper);
     }
 
     // Random UUID generator

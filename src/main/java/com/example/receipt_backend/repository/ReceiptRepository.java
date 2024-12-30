@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface ReceiptRepository extends JpaRepository<Receipt, UUID>, JpaSpecificationExecutor<Receipt> {
 
 
+
 }

@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface TenantService {
     TenantResponseDTO createTenant(TenantRequestDTO tenantRequest);
 
-    User createAdminUser(TenantRequestDTO request, Tenant tenant);
+    //User createAdminUser(TenantRequestDTO request, Tenant tenant);
 
     @Transactional
     TenantResponseDTO updateTenant(UUID tenantId, UpdateTenantRequestDTO request);

@@ -15,6 +15,7 @@ public class AppUtils {
 
     private static ObjectMapper objectMapper;
 
+
     public AppUtils(ObjectMapper objectMapper) {
         AppUtils.objectMapper = objectMapper;
         MapToJsonConverter.setObjectMapper(objectMapper);
@@ -73,5 +74,6 @@ public class AppUtils {
         }
         return sb.toString();
     }
+
 
 }

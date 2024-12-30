@@ -1,51 +1,147 @@
-// src/main/java/com/example/receipt_backend/service/impl/OcrServiceImpl.java
 package com.example.receipt_backend.service.impl;
 
+import com.example.receipt_backend.dto.response.OcrResponse;
+import com.example.receipt_backend.dto.response.OcrResult;
+import com.example.receipt_backend.dto.response.ReceiptProcessingResult;
 import com.example.receipt_backend.entity.Receipt;
+import com.example.receipt_backend.entity.UploadRequest;
+import com.example.receipt_backend.exception.BadRequestException;
+import com.example.receipt_backend.ocr.OcrClient;
 import com.example.receipt_backend.repository.ReceiptRepository;
+import com.example.receipt_backend.repository.UploadRequestRepository;
+import com.example.receipt_backend.service.FileStorageService;
 import com.example.receipt_backend.service.OcrService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.receipt_backend.utils.ReceiptStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class OcrServiceImpl implements OcrService {
 
+    private final OcrClient ocrClient;
+    private final FileStorageService storageService;
     private final ReceiptRepository receiptRepository;
-    private final ObjectMapper objectMapper;
+    private final UploadRequestRepository uploadRequestRepository;
 
+    /**
+     * Asynchronously processes a receipt by performing OCR and updating the receipt status.
+     *
+     * @param receipt The receipt entity to process.
+     * @param request The upload request associated with the receipt.
+     */
     @Async("taskExecutor")
     @Override
-    public void extractOcrAsync(Receipt receipt) {
+    @Transactional
+    public void processReceiptAsync(Receipt receipt, UploadRequest request) {
+        log.info("Starting OCR processing for receipt: {}", receipt.getReceiptId());
+
         try {
-            // Perform OCR
-            Map<String, String> ocrDataMap = performOcr(receipt.getImageUrl());
+            // Perform OCR processing with retry mechanism
+            OcrResponse ocrResponse = processWithRetry(receipt.getImageUrl(), receipt.getReceiptType().getTemplatePath());
 
-            // Set ocrData
-            receipt.setOcrData(ocrDataMap);
+            // Convert OCR response to processing result
+            ReceiptProcessingResult result = convertOcrResponseToProcessingResult(ocrResponse);
 
-            // Save the updated receipt
-            receiptRepository.save(receipt);
+            // Handle the OCR result
+            handleOcrResult(receipt, request, result);
         } catch (Exception e) {
-            log.error("Failed to process OCR for receipt: {}", receipt.getReceiptId(), e);
+            // Handle any exceptions that occurred during OCR processing
+            handleOcrError(receipt, e);
         }
     }
 
-    private Map<String, String> performOcr(String imageUrl) {
-        // Replace with actual OCR extraction logic
-        // For demonstration, returning a sample map
-        Map<String, String> ocrResult = new HashMap<>();
-        ocrResult.put("recognizedText", "Sample OCR text");
-        ocrResult.put("confidence", "0.98");
-        return ocrResult;
+    /**
+     * Converts the OCR response to a receipt processing result.
+     *
+     * @param ocrResponse The response from the OCR service.
+     * @return The processing result containing extracted data.
+     */
+    private ReceiptProcessingResult convertOcrResponseToProcessingResult(OcrResponse ocrResponse) {
+        if (ocrResponse == null || !"success".equalsIgnoreCase(ocrResponse.getStatus())) {
+            throw new BadRequestException("OCR service returned unsuccessful status.");
+        }
+
+        List<Map<String, String>> extractedData = ocrResponse.getData().stream()
+                .map(this::convertOcrResultToMap)
+                .collect(Collectors.toList());
+
+        return ReceiptProcessingResult.builder()
+                .success(true)
+                .extractedData(extractedData)
+                .build();
+    }
+
+    /**
+     * Handles the successful OCR processing by updating the receipt and saving it.
+     *
+     * @param receipt The receipt entity to update.
+     * @param request The upload request associated with the receipt.
+     * @param result  The result of the OCR processing.
+     */
+    private void handleOcrResult(Receipt receipt, UploadRequest request, ReceiptProcessingResult result) {
+        if (result.isSuccess()) {
+            receipt.setOcrData(result.getExtractedData());
+            receipt.setStatus(ReceiptStatus.PROCESSED);
+            receiptRepository.save(receipt);
+            log.info("OCR processing succeeded for receipt: {}", receipt.getReceiptId());
+        } else {
+            receipt.setStatus(ReceiptStatus.FAILED);
+            receiptRepository.save(receipt);
+            log.error("OCR processing failed for receipt: {}", receipt.getReceiptId());
+        }
+    }
+
+    /**
+     * Handles any errors that occur during OCR processing by updating the receipt status.
+     *
+     * @param receipt The receipt entity to update.
+     * @param e       The exception that occurred.
+     */
+    private void handleOcrError(Receipt receipt, Throwable e) {
+        log.error("Exception during OCR processing for receipt {}: {}", receipt.getReceiptId(), e.getMessage(), e);
+        receipt.setStatus(ReceiptStatus.FAILED);
+        receiptRepository.save(receipt);
+    }
+
+    /**
+     * Processes OCR with a retry mechanism. Retries up to 3 times with exponential backoff.
+     *
+     * @param fileUrl      The URL of the file to process.
+     * @param templatePath The template path for OCR.
+     * @return The OCR response.
+     */
+    @Retryable(
+            value = { Exception.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000, multiplier = 2)
+    )
+    public OcrResponse processWithRetry(String fileUrl, String templatePath) {
+        log.info("Attempting OCR processing for file: {}", fileUrl);
+        return ocrClient.processReceipt(fileUrl, templatePath);
+    }
+
+    /**
+     * Converts an OCR result to a map of label-text pairs.
+     *
+     * @param ocrResult The OCR result to convert.
+     * @return A map containing label-text pairs.
+     */
+    private Map<String, String> convertOcrResultToMap(OcrResult ocrResult) {
+        Map<String, String> map = new HashMap<>();
+        map.put(ocrResult.getLabel(), ocrResult.getText());
+        return map;
     }
 }

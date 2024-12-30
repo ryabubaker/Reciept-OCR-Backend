@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.*;
 
 @RestController
@@ -28,53 +29,45 @@ public class ReceiptTypeController {
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Create a new receipt type", description = "Allows a company admin to create a new receipt type")
     public ResponseEntity<ReceiptTypeResponseDTO> createReceiptType(
-            @Valid @RequestBody ReceiptTypeRequestDTO requestDTO) {
+            @Valid @ModelAttribute ReceiptTypeRequestDTO requestDTO) throws IOException {
         ReceiptTypeResponseDTO responseDTO = receiptTypeService.createReceiptType(requestDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{receiptTypeId}")
+    @GetMapping("/{name}")
     @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
-    @Operation(summary = "Get receipt type by ID", description = "Retrieve a specific receipt type by its ID")
-    public ResponseEntity<ReceiptTypeResponseDTO> getReceiptTypeById(
-            @PathVariable UUID receiptTypeId) {
-        ReceiptTypeResponseDTO responseDTO = receiptTypeService.getReceiptTypeById(receiptTypeId);
+    @Operation(summary = "Get receipt type by name", description = "Retrieve a specific receipt type by its Name")
+    public ResponseEntity<ReceiptTypeResponseDTO> getReceiptTypeByName(
+            @PathVariable String name) {
+        ReceiptTypeResponseDTO responseDTO = receiptTypeService.getReceiptTypeByName(name);
         return ResponseEntity.ok(responseDTO);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
     @Operation(summary = "Get all receipt types", description = "Retrieve a list of all receipt types")
-    public ResponseEntity<List<ReceiptTypeResponseDTO>> getAllReceiptTypes() {
-        List<ReceiptTypeResponseDTO> receiptTypes = receiptTypeService.getAllReceiptTypes();
+    public ResponseEntity<List<String>> getAllReceiptTypes() {
+        List<String> receiptTypes = receiptTypeService.getAllReceiptTypes();
         return ResponseEntity.ok(receiptTypes);
     }
 
-    @PatchMapping("/{receiptTypeId}")
+    @PatchMapping("/{currentName}")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Update a receipt type", description = "Allows a company admin to update an existing receipt type")
     public ResponseEntity<ReceiptTypeResponseDTO> updateReceiptType(
-            @PathVariable UUID receiptTypeId,
-            @Valid @RequestBody ReceiptTypeUpdateRequestDTO requestDTO) {
-        ReceiptTypeResponseDTO receiptTypeResponseDTO = receiptTypeService.updateReceiptType(receiptTypeId, requestDTO);
+            @PathVariable String currentName,
+            @Valid @RequestBody ReceiptTypeUpdateRequestDTO requestDTO) throws IOException {
+        ReceiptTypeResponseDTO receiptTypeResponseDTO = receiptTypeService.updateReceiptType(currentName, requestDTO);
         return ResponseEntity.ok(receiptTypeResponseDTO);
     }
 
-    @DeleteMapping("/{receiptTypeId}")
+    @DeleteMapping("/{name}")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Delete a receipt type", description = "Allows a company admin to delete a receipt type")
     public ResponseEntity<GenericResponseDTO<String>> deleteReceiptType(
-            @PathVariable UUID receiptTypeId) {
-        receiptTypeService.deleteReceiptType(receiptTypeId);
+            @PathVariable String name) throws IOException {
+        receiptTypeService.deleteReceiptType(name);
         return ResponseEntity.ok(new GenericResponseDTO<>("Receipt type deleted successfully", "200"));
     }
 
-    @DeleteMapping("/{receiptTypeId}/fields/{fieldName}")
-    public ResponseEntity<GenericResponseDTO<String>> deleteReceiptField(
-            @PathVariable UUID receiptTypeId,
-            @PathVariable String fieldName) {
-
-        receiptTypeService.deleteReceiptField(receiptTypeId, fieldName);
-        return ResponseEntity.ok(new GenericResponseDTO<>("Field { } deleted successfully" + fieldName, "200"));
-    }
 }

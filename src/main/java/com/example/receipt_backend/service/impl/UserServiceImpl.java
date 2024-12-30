@@ -1,11 +1,10 @@
 package com.example.receipt_backend.service.impl;
 
+import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
-import com.example.receipt_backend.dto.request.ForgotPasswordRequestDTO;
-import com.example.receipt_backend.dto.request.ResetPasswordRequestDTO;
-import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
-import com.example.receipt_backend.dto.request.VerifyEmailRequestDTO;
+import com.example.receipt_backend.dto.request.*;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
+import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.Tenant;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.AppExceptionConstants;
@@ -45,9 +44,8 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final AppProperties appProperties;
-    private TenantRepository tenantRepository;
-    private RoleRepository roleRepository;
-
+    private final TenantRepository tenantRepository;
+    private final RoleRepository roleRepository;
 
     @Override
     public List<UserDTO> getAllUsers(Pageable pageable) {
@@ -91,6 +89,8 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userMapper.toEntity(userDto);
+
+
 
         Tenant tenant = tenantRepository.findByTenantId(UUID.fromString(tenantId))
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.TENANT_NOT_FOUND));
@@ -163,7 +163,6 @@ public class UserServiceImpl implements UserService {
         user.setVerificationCodeExpiresAt(null);
         user.setVerificationCode(null);
         userRepository.save(user);
-        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
         GenericResponseDTO<Boolean> emailVerifiedResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
         return emailVerifiedResponseDTO;
     }
@@ -200,6 +199,36 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(updatePasswordRequest.getNewPassword()));
         userRepository.save(user);
         return GenericResponseDTO.<Boolean>builder().response(true).build();
+    }
+
+    @Override
+    public void createUserByAdmin(RegisterUserByAdminDto request) {
+        String tenantName = CurrentTenantIdentifierResolverImpl.getTenant();
+        String tenantId = tenantRepository.findByTenantName(tenantName).getTenantId().toString();
+
+        RoleType roleType = RoleType.valueOf(request.getRoleType());
+
+
+        String generatedPassword = AppUtils.generateRandomAlphaNumericString(10);
+
+            // Build UserDTO with the correct tenantId
+            UserDTO adminUserDto = UserDTO.builder()
+                    .username(request.getEmail())
+                    .email(request.getEmail())
+                    .emailVerified(true)
+                    .password(generatedPassword)
+                    .registeredProviderName(SecurityEnums.AuthProviderId.local)
+                    .roles(Set.of(request.getRoleType()))
+                    .tenantId(tenantId) // Use tenantId from the saved tenant
+                    .build();
+
+            // Create the admin user
+            User createdUser = createUser(adminUserDto, tenantId, roleType);
+            System.out.println("Admin user created with ID: " + createdUser.getId());
+            userRepository.findById(createdUser.getId()).orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
+
+            // Send a welcome email with the generated password
+            emailService.sendWelcomeEmailWithPassword(createdUser.getEmail(), createdUser.getEmail(), generatedPassword);
     }
 
 

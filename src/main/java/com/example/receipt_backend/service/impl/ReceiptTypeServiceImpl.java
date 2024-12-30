@@ -1,23 +1,29 @@
 package com.example.receipt_backend.service.impl;
 
-import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.request.ReceiptTypeRequestDTO;
 import com.example.receipt_backend.dto.request.ReceiptTypeUpdateRequestDTO;
 import com.example.receipt_backend.dto.response.ReceiptTypeResponseDTO;
 import com.example.receipt_backend.entity.ReceiptType;
 import com.example.receipt_backend.exception.AppExceptionConstants;
-import com.example.receipt_backend.exception.BadRequestException;
+import com.example.receipt_backend.exception.CustomAppException;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.ReceiptTypeMapper;
 import com.example.receipt_backend.repository.ReceiptTypeRepository;
 import com.example.receipt_backend.service.ReceiptTypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,35 +34,73 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
     private final ReceiptTypeRepository receiptTypeRepository;
     private final ReceiptTypeMapper receiptTypeMapper;
 
+    @Value("${myapp.template.base-directory}")
+    private String baseDirectory;
+
     @Transactional
     @Override
-    public ReceiptTypeResponseDTO createReceiptType(ReceiptTypeRequestDTO requestDTO) {
-        String tenant = CurrentTenantIdentifierResolverImpl.getTenant();
-        log.debug("Current Tenant is {}", tenant );
-        if (tenant == null) {
+    public ReceiptTypeResponseDTO createReceiptType(ReceiptTypeRequestDTO requestDTO) throws IOException {
+        // Validate file
+        MultipartFile templateFile = requestDTO.getTemplate();
+        Path targetLocation = saveTemplate(templateFile);
 
-            throw new RuntimeException("Tenant not set in context");
+        try {
+            // Create and save ReceiptType entity
+            ReceiptType receiptType = ReceiptType.builder()
+                    .name(requestDTO.getName())
+                    .templatePath(targetLocation.toString())
+                    .build();
+            receiptTypeRepository.save(receiptType);
+
+            // Map to response DTO
+            ReceiptTypeResponseDTO responseDTO = receiptTypeMapper.toResponseDTO(receiptType);
+            return responseDTO;
+        } catch (Exception e) {
+            Files.deleteIfExists(targetLocation);
+            throw e;
+        }
+    }
+
+    private Path saveTemplate(MultipartFile templateFile) throws IOException {
+        if (templateFile == null || templateFile.isEmpty()) {
+            throw new CustomAppException("Template file is required.");
+        }
+        if (!templateFile.getOriginalFilename().endsWith(".json")) {
+            throw new CustomAppException("Only .json files are allowed.");
         }
 
-        boolean exists = receiptTypeRepository.existsByName(requestDTO.getName());
-        if (exists) {
-            throw new BadRequestException(AppExceptionConstants.RECEIPT_TYPE_ALREADY_EXISTS);
+        // Define the target location
+        String originalFilename = StringUtils.cleanPath(templateFile.getOriginalFilename());
+        Path tenantDirectory = Paths.get(baseDirectory, "Tenant_A"); // Adjust for multi-tenant
+        Path targetLocation = tenantDirectory.resolve(originalFilename);
+
+        // Create directories if they don't exist
+        if (!Files.exists(tenantDirectory)) {
+            Files.createDirectories(tenantDirectory);
         }
 
-        // Map DTO to Entity
-        ReceiptType receiptType = receiptTypeMapper.toEntity(requestDTO);
+        // Save the file
+        Files.copy(templateFile.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+        return targetLocation;
+    }
 
-        // Save Entity; Hibernate will handle the tenant scoping
-        ReceiptType savedReceiptType = receiptTypeRepository.save(receiptType);
+    @Override
+    public ReceiptTypeResponseDTO updateReceiptType(String currentReceiptTypeName, ReceiptTypeUpdateRequestDTO updateDto) throws IOException {
+        ReceiptType existing = receiptTypeRepository.findByName(currentReceiptTypeName)
+                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
 
-        // Map Entity to Response DTO
-        return receiptTypeMapper.toResponseDTO(savedReceiptType);
+        MultipartFile newJsonFile = updateDto.getTemplate();
+        saveTemplate(newJsonFile);
+
+        receiptTypeMapper.updateEntity(updateDto, existing);
+
+        return receiptTypeMapper.toResponseDTO(existing);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public ReceiptTypeResponseDTO getReceiptTypeById(UUID receiptTypeId) {
-        ReceiptType receiptType = receiptTypeRepository.findById(receiptTypeId)
+    public ReceiptTypeResponseDTO getReceiptTypeByName(String receiptTypeName) {
+        ReceiptType receiptType = receiptTypeRepository.findByName(receiptTypeName)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
 
         return receiptTypeMapper.toResponseDTO(receiptType);
@@ -64,49 +108,26 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ReceiptTypeResponseDTO> getAllReceiptTypes() {
+    public List<String> getAllReceiptTypes() {
         List<ReceiptType> receiptTypes = receiptTypeRepository.findAll();
         return receiptTypes.stream()
-                .map(receiptTypeMapper::toResponseDTO)
+                .map(ReceiptType::getName)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     @Override
-    public ReceiptTypeResponseDTO updateReceiptType(UUID receiptTypeId, ReceiptTypeUpdateRequestDTO requestDTO) {
-        ReceiptType receiptType = receiptTypeRepository.findById(receiptTypeId)
+    public void deleteReceiptType(String receiptTypeName) throws IOException {
+
+        ReceiptType receiptType = receiptTypeRepository.findByName(receiptTypeName)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
 
-        // Update fields as per DTO
-        receiptTypeMapper.updateEntity(requestDTO, receiptType);
+        // Delete the template file from path
+        String templatePath = receiptType.getTemplatePath();
 
-        // Save updated entity
-        ReceiptType updatedReceiptType = receiptTypeRepository.save(receiptType);
+        Files.deleteIfExists(Path.of(templatePath));
 
-        return receiptTypeMapper.toResponseDTO(updatedReceiptType);
-    }
-
-    @Transactional
-    @Override
-    public void deleteReceiptType(UUID receiptTypeId) {
-        ReceiptType receiptType = receiptTypeRepository.findById(receiptTypeId)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
-
+        // Delete the entity
         receiptTypeRepository.delete(receiptType);
-    }
-
-    @Override
-    @Transactional
-    public void deleteReceiptField(UUID receiptTypeId, String fieldName) {
-        ReceiptType receiptType = receiptTypeRepository.findById(receiptTypeId)
-                .orElseThrow(() -> new ResourceNotFoundException("ReceiptType not found with ID: " + receiptTypeId));
-
-        boolean removed = receiptType.getFields().removeIf(field -> field.getFieldName().equalsIgnoreCase(fieldName));
-
-        if (!removed) {
-            throw new ResourceNotFoundException("Field '" + fieldName + "' not found in ReceiptType with ID: " + receiptTypeId);
-        }
-
-        receiptTypeRepository.save(receiptType);
     }
 }

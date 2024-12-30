@@ -1,6 +1,7 @@
 package com.example.receipt_backend.controller;
 
 import com.example.receipt_backend.dto.UserDTO;
+import com.example.receipt_backend.dto.request.RegisterUserByAdminDto;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.entity.User;
@@ -32,6 +33,15 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+
+    @PostMapping("admin-create")
+    @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
+    @Operation(summary = "Create a new user by tenant admin", description = "Create a new user with the specified details")
+    public ResponseEntity<GenericResponseDTO<String>> createUserByAdmin(@RequestBody RegisterUserByAdminDto userDTO) {
+        userService.createUserByAdmin(userDTO);
+        GenericResponseDTO<String> response = new GenericResponseDTO<>("User created successfully", "200");
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 
     @GetMapping
     @Operation(summary = "Get all users", description = "Retrieve a list of all users with pagination")

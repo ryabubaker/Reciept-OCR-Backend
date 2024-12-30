@@ -4,20 +4,19 @@ package com.example.receipt_backend.service.impl;
 import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.ReceiptDTO;
 
-import com.example.receipt_backend.dto.request.QueryDTO;
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
 import com.example.receipt_backend.entity.Receipt;
+import com.example.receipt_backend.entity.ReceiptType;
 import com.example.receipt_backend.entity.UploadRequest;
-import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.*;
 import com.example.receipt_backend.mapper.ReceiptMapper;
 import com.example.receipt_backend.mapper.UploadRequestMapper;
 import com.example.receipt_backend.repository.*;
+import com.example.receipt_backend.security.AppSecurityUtils;
 import com.example.receipt_backend.service.FileStorageService;
 import com.example.receipt_backend.service.OcrService;
 import com.example.receipt_backend.service.ReceiptService;
-import com.example.receipt_backend.utils.ReceiptSpecification;
 import com.example.receipt_backend.utils.ReceiptStatus;
 import com.example.receipt_backend.utils.RequestStatus;
 import com.example.receipt_backend.websocket.WebSocketNotificationService;
@@ -26,17 +25,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -46,26 +40,24 @@ import java.util.stream.Collectors;
 public class ReceiptServiceImpl implements ReceiptService {
 
     private final ReceiptRepository receiptRepository;
-    private final UserRepository userRepository;
     private final ReceiptMapper receiptMapper;
-    private final TenantRepository tenantRepository;
     private final UploadRequestMapper uploadRequestMapper;
     private final FileStorageService s3Service;
     private final OcrService ocrService;
     private final WebSocketNotificationService notificationService;
     private final UploadRequestRepository uploadRequestRepository;
+    private final ReceiptTypeRepository receiptTypeRepository;
 
     @Transactional
     @Override
     public void uploadReceipts(UploadRequestDTO uploadRequestDto) {
         // Convert and save the UploadRequest entity
         UploadRequest uploadRequest = uploadRequestMapper.toEntity(uploadRequestDto);
-        UploadRequest request = uploadRequestRepository.save(uploadRequest);
+        UploadRequest savedRequest = uploadRequestRepository.save(uploadRequest);
 
-        UUID requestId = request.getRequestId();
+        UUID requestId = savedRequest.getRequestId();
 
-
-        String tenantId = getCurrentTenantId().toString();
+        String tenantId = CurrentTenantIdentifierResolverImpl.getTenant();
 
         // Create and save Receipts
         List<Receipt> receipts = Arrays.stream(uploadRequestDto.getFiles())
@@ -75,44 +67,62 @@ public class ReceiptServiceImpl implements ReceiptService {
                         // Upload file to S3 and get the URL
                         String s3Key = s3Service.uploadFile(file, tenantId, requestId.toString());
                         String imageUrl = s3Service.getFileUrl(s3Key);
-
                         // Create Receipt entity
-                        return receiptMapper.toEntity(imageUrl, request, uploadRequestDto.getReceiptTypeId());
+                        ReceiptType receiptType = receiptTypeRepository.findByName(uploadRequestDto.getReceiptTypeName()).orElseThrow(
+                                () -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND)
+                        );
+                        return receiptMapper.toEntity(imageUrl, savedRequest, receiptType);
                     } catch (IOException e) {
                         log.error("Failed to upload file: {}", file.getOriginalFilename(), e);
                         throw new BadRequestException(AppExceptionConstants.FILE_UPLOAD_FAILED, e);
                     }
                 }).collect(Collectors.toList());
 
-        receiptRepository.saveAll(receipts); // Save all receipts at once
-        receipts.forEach(ocrService::extractOcrAsync); // Process OCR asynchronously
+        savedRequest.getReceipts().addAll(receipts);
+        receiptRepository.saveAll(receipts);
+
+        // Initiate OCR processing asynchronously
+        receipts.forEach(r -> ocrService.processReceiptAsync(r, savedRequest));
     }
 
     @Transactional
     @Override
-    public void confirmReceipt(UUID receiptId) {
-        User approvedBy = getCurrentUser();
-
-        Receipt receipt = receiptRepository.findById(receiptId).orElseThrow( () ->
+    public ReceiptDTO approveReceipt(UUID receiptId, Map<String, Object> updatedValues) {
+        // 1) Find the receipt
+        Receipt receipt = receiptRepository.findById(receiptId).orElseThrow(() ->
                 new ResourceNotFoundException(AppExceptionConstants.RECEIPT_NOT_FOUND));
 
-        receipt.setStatus(ReceiptStatus.CONFIRMED);
-        receipt.setApprovedBy(approvedBy);
+        // 2) Check that it's in a status that can be manually reviewed
+        if (receipt.getStatus() != ReceiptStatus.PROCESSED &&
+                receipt.getStatus() != ReceiptStatus.FAILED) {
+            throw new BadRequestException("Receipt is not in a reviewable status");
+        }
+
+        // 3) Update the values in receipt.ocrData
+        List<Map<String, String>> currentOcrData = receipt.getOcrData();
+
+        receipt.setOcrData(currentOcrData);
+
+        // 4) Mark the receipt as APPROVED
+        receipt.setStatus(ReceiptStatus.APPROVED);
+        receipt.setApprovedBy(AppSecurityUtils.getCurrentUser());
         receipt.setApprovedAt(LocalDateTime.now());
+
+        // 5) Save
+        receipt = receiptRepository.save(receipt);
 
         // Check if all receipts in the request are confirmed
         boolean allConfirmed = receipt.getRequest().getReceipts().stream()
-                .allMatch(r -> r.getStatus() == ReceiptStatus.CONFIRMED);
+                .allMatch(r -> r.getStatus() == ReceiptStatus.APPROVED);
         if (allConfirmed) {
-            receipt.getRequest().setStatus(RequestStatus.CONFIRMED);
+            receipt.getRequest().setStatus(RequestStatus.COMPLETED);
             uploadRequestRepository.save(receipt.getRequest());
         }
 
-
-        receiptRepository.save(receipt);
-
-        notificationService.broadcastMessageAsync("Receipt approved.");
+        // Convert to DTO or return the entity
+        return receiptMapper.toDTO(receipt);
     }
+
     @Transactional
     @Override
     public void deleteReceipt(UUID receiptId) {
@@ -150,26 +160,26 @@ public class ReceiptServiceImpl implements ReceiptService {
 
 
 
-    @Override
-    public Page<ReceiptDTO> listReceipts(QueryDTO queryDTO) {
-        UUID tenantId = getCurrentTenantId();
-
-        Specification<Receipt> spec = Specification.where(ReceiptSpecification.belongsToTenant(tenantId))
-                .and(ReceiptSpecification.containsSearchQuery(queryDTO.getSearchQuery()))
-                .and(ReceiptSpecification.hasStatus(queryDTO.getStatus()))
-                .and(ReceiptSpecification.uploadedAfter(queryDTO.getFromDate()))
-                .and(ReceiptSpecification.uploadedBefore(queryDTO.getToDate()));
-
-        Page<Receipt> receipts = receiptRepository.findAll(spec, queryDTO.getPageable());
-
-        log.info("Fetching receipts with filters - SearchQuery: {}, Status: {}, From: {}, To: {}",
-                queryDTO.getSearchQuery(),
-                queryDTO.getStatus(),
-                queryDTO.getFromDate(),
-                queryDTO.getToDate());
-
-        return receipts.map(receiptMapper::toDTO);
-    }
+//    @Override
+//    public Page<ReceiptDTO> listReceipts(QueryDTO queryDTO) {
+//        UUID tenantId = getCurrentTenantId();
+//
+//        Specification<Receipt> spec = Specification.where(ReceiptSpecification.belongsToTenant(tenantId))
+//                .and(ReceiptSpecification.containsSearchQuery(queryDTO.getSearchQuery()))
+//                .and(ReceiptSpecification.hasStatus(queryDTO.getStatus()))
+//                .and(ReceiptSpecification.uploadedAfter(queryDTO.getFromDate()))
+//                .and(ReceiptSpecification.uploadedBefore(queryDTO.getToDate()));
+//
+//        Page<Receipt> receipts = receiptRepository.findAll(spec, queryDTO.getPageable());
+//
+//        log.info("Fetching receipts with filters - SearchQuery: {}, Status: {}, From: {}, To: {}",
+//                queryDTO.getSearchQuery(),
+//                queryDTO.getStatus(),
+//                queryDTO.getFromDate(),
+//                queryDTO.getToDate());
+//
+//        return receipts.map(receiptMapper::toDTO);
+//    }
 
     @Transactional
     @Override
@@ -189,21 +199,6 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         return receiptMapper.toDTO(receipt);
     }
-    @Transactional
-    @Override
-    public ReceiptDTO updateOcrData(UUID receiptId, Map<String, String> updatedOcrData) {
-
-        Receipt receipt = receiptRepository.findById(receiptId)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_NOT_FOUND));
-
-        receipt.setOcrData(updatedOcrData);
-
-        return receiptMapper.toDTO(receiptRepository.save(receipt));
-    }
-
-    private UUID getCurrentTenantId() {
-        return tenantRepository.findByTenantName(CurrentTenantIdentifierResolverImpl.getTenant()).getTenantId();
-    }
 
     private void validateFile(MultipartFile file) {
         if (file.isEmpty()) {
@@ -220,15 +215,5 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
     }
 
-    private User getCurrentUser() {
-        if (SecurityContextHolder.getContext().getAuthentication() == null ||
-                !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
-            throw new BadRequestException("User is not authenticated.");
-        }
-
-        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
-    }
 }
 

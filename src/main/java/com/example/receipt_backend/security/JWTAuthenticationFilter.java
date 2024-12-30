@@ -42,40 +42,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                // Determine tenantName based on role
-                boolean isSystemAdmin = userDetails.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_SYSTEM_ADMIN"));
+//                // Determine tenantName based on role
+//                boolean isSystemAdmin = userDetails.getAuthorities().stream()
+//                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_SYSTEM_ADMIN"));
+//
+//                String tenantName;
+//                if (isSystemAdmin) {
+//                    tenantName = "public";
+//                } else {
+//                    tenantName = jwtUtils.getTenantNameFromJwtToken(jwt);
+//                    if (tenantName == null || tenantName.isEmpty()) {
+//                        logger.error("Tenant ID is missing in JWT token for user: {}", email);
+//                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant ID is missing");
+//                        return;
+//                    }
+//                }
+//
+//                CurrentTenantIdentifierResolverImpl.setTenant(tenantName);
+//                logger.debug("Tenant ID set to: {}", tenantName);
 
-                String tenantName;
-                if (isSystemAdmin) {
-                    tenantName = "public";
-                } else {
-                    tenantName = jwtUtils.getTenantNameFromJwtToken(jwt);
-                    if (tenantName == null || tenantName.isEmpty()) {
-                        logger.error("Tenant ID is missing in JWT token for user: {}", email);
-                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant ID is missing");
-                        return;
-                    }
+                try {
+                    // Extract tenant identifier from request headers, parameters, or other sources
+                    String tenantId =  jwtUtils.getTenantNameFromJwtToken(jwt);
+                    CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
+                    filterChain.doFilter(request, response);
+                } finally {
+                    CurrentTenantIdentifierResolverImpl.clear();
                 }
 
-                CurrentTenantIdentifierResolverImpl.setTenant(tenantName);
-                logger.debug("Tenant ID set to: {}", tenantName);
-
                 // Mark the request as async-safe if needed
-                request.setAttribute("isAsync", true); // Set to true for async tasks
+              //  request.setAttribute("isAsync", true); // Set to true for async tasks
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e.getMessage());
         }
 
-        try {
-            filterChain.doFilter(request, response);
-        } finally {
-            if (!isAsyncRequest(request)) {
-                CurrentTenantIdentifierResolverImpl.clear();
-                logger.debug("Tenant context cleared");
-            }
-        }
+
     }
 
     private boolean isAsyncRequest(HttpServletRequest request) {

@@ -1,5 +1,6 @@
 package com.example.receipt_backend.entity;
 
+import com.example.receipt_backend.utils.ListMapToJsonConverter;
 import com.example.receipt_backend.utils.MapToJsonConverter;
 import com.example.receipt_backend.utils.ReceiptStatus;
 import jakarta.persistence.*;
@@ -11,6 +12,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,12 +30,12 @@ public class Receipt {
     private UUID receiptId;
 
     @Setter
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     private UploadRequest request;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receipt_type_id", nullable = false)
+    @JoinColumn(name = "receipt_type_name", nullable = false)
     private ReceiptType receiptType;
 
     @Column(name = "image_url", nullable = false)
@@ -43,10 +45,10 @@ public class Receipt {
     @Column(name = "status", nullable = false)
     private ReceiptStatus status = ReceiptStatus.PENDING;
 
-    @Convert(converter = MapToJsonConverter.class)
+    @Convert(converter = ListMapToJsonConverter.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "ocr_data", columnDefinition = "jsonb")
-    private Map<String, String> ocrData;
+    private List<Map<String, String>> ocrData;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by_user_id")

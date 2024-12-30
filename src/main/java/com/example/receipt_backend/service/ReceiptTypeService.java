@@ -7,25 +7,23 @@ import com.example.receipt_backend.dto.request.ReceiptTypeUpdateRequestDTO;
 import com.example.receipt_backend.dto.response.ReceiptTypeResponseDTO;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 public interface ReceiptTypeService {
 
     @Transactional
-    ReceiptTypeResponseDTO createReceiptType(ReceiptTypeRequestDTO requestDTO);
+    ReceiptTypeResponseDTO createReceiptType(ReceiptTypeRequestDTO dto) throws IOException;
 
     @Transactional(readOnly = true)
-    ReceiptTypeResponseDTO getReceiptTypeById(UUID receiptTypeId);
+    ReceiptTypeResponseDTO getReceiptTypeByName(String receiptTypeName);
 
     @Transactional(readOnly = true)
-    List<ReceiptTypeResponseDTO> getAllReceiptTypes();
+    List<String> getAllReceiptTypes();
 
     @Transactional
-    ReceiptTypeResponseDTO updateReceiptType(UUID receiptTypeId, ReceiptTypeUpdateRequestDTO requestDTO);
+    ReceiptTypeResponseDTO updateReceiptType(String receiptTypeName, ReceiptTypeUpdateRequestDTO requestDTO) throws IOException;
 
     @Transactional
-    void deleteReceiptType(UUID receiptTypeId);
-    @Transactional
-    void deleteReceiptField(UUID receiptTypeId, String fieldName);
+    void deleteReceiptType(String receiptTypeName) throws IOException;
 }

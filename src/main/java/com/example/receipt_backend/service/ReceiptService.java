@@ -18,21 +18,19 @@ public interface ReceiptService {
     void uploadReceipts(UploadRequestDTO requestDTO);
 
     @Transactional
-    void confirmReceipt(UUID receiptId);
-
-    @Transactional
     UploadResponseDTO getRequestById(UUID requestId);
 
     ReceiptDTO getReceiptDetails(UUID receiptId);
 
-    @Transactional
-    ReceiptDTO updateOcrData(UUID receiptId, Map<String, String> updatedOcrData);
+//    @Transactional
+//    ReceiptDTO updateOcrData(UUID receiptId, Map<String, String> updatedOcrData);
 
     Page<UploadResponseDTO> getPendingRequests(Pageable pageable);
 
     @Transactional
-    void deleteReceipt(UUID receiptId);
+    ReceiptDTO approveReceipt(UUID receiptId, Map<String, Object> updatedValues);
 
     @Transactional
-    Page<ReceiptDTO> listReceipts(QueryDTO requestDTO);
+    void deleteReceipt(UUID receiptId);
+
 }

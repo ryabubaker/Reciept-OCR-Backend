@@ -12,6 +12,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.lang.Nullable;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,10 +27,11 @@ public class UploadRequest {
     private UUID requestId;
 
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<Receipt> receipts;
+    private List<Receipt> receipts = new ArrayList<>();
 
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private RequestStatus status = RequestStatus.PENDING;
 
     @CreatedBy

@@ -11,22 +11,21 @@ import java.util.Map;
 public class CurrentTenantIdentifierResolverImpl implements CurrentTenantIdentifierResolver<String> {
     private static final String DEFAULT_TENANT = "public";
 
-    private static final ThreadLocal<String> currentTenant = new ThreadLocal<>();
-
+    private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
     public static void setTenant(String tenant) {
-        currentTenant.set(tenant);
+        CURRENT_TENANT.set(tenant);
     }
 
     public static String getTenant() {
-        return currentTenant.get();
+        return CURRENT_TENANT.get();
     }
     public static void clear() {
-        currentTenant.remove();
+        CURRENT_TENANT.remove();
     }
 
     @Override
     public String resolveCurrentTenantIdentifier() {
-        return currentTenant.get() != null ? currentTenant.get() : DEFAULT_TENANT;
+        return CURRENT_TENANT.get() != null ? CURRENT_TENANT.get() : DEFAULT_TENANT;
     }
 
     @Override

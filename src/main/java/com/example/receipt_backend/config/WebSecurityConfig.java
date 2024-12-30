@@ -2,7 +2,6 @@ package com.example.receipt_backend.config;
 
 import com.example.receipt_backend.security.AuthEntryPointJwt;
 import com.example.receipt_backend.security.JwtAuthenticationFilter;
-import com.example.receipt_backend.security.TenantLoggingFilter;
 import com.example.receipt_backend.security.UserDetailsServiceImpl;
 import com.example.receipt_backend.security.oauth.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,6 @@ public class WebSecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsServiceImpl customUserDetailsService;
-    private final TenantLoggingFilter tenantLoggingFilter;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -56,7 +54,6 @@ public class WebSecurityConfig {
                 );
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(tenantLoggingFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 

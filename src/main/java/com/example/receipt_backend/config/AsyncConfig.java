@@ -13,13 +13,19 @@ import java.util.concurrent.Executor;
 @EnableAsync
 public class AsyncConfig {
 
+    private final TenantAwareTaskDecorator taskDecorator;
+
+    public AsyncConfig(TenantAwareTaskDecorator taskDecorator) {
+        this.taskDecorator = taskDecorator;
+    }
+
     @Bean(name = "taskExecutor")
     public ThreadPoolTaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(10);
         executor.setQueueCapacity(25);
-        executor.setTaskDecorator(new TenantAwareTaskDecorator());
+        executor.setTaskDecorator(taskDecorator);
         executor.setThreadNamePrefix("OCR-Executor-");
         executor.initialize();
         return executor;

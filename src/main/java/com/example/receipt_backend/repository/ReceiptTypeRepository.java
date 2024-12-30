@@ -10,6 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface ReceiptTypeRepository extends JpaRepository<ReceiptType, UUID> {
-    boolean existsByName(String name);
+
+    Optional<ReceiptType> findByName(String receiptTypeName);
 }
 

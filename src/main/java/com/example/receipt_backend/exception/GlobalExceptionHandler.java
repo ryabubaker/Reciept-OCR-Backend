@@ -46,11 +46,10 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler(BadCredentialsException.class)
+    @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<GenericResponseDTO<String>> handleBadCredentialsException(
-            BadCredentialsException ex, HttpServletRequest request) {
+            AuthenticationException ex, HttpServletRequest request) {
 
-        log.error("BadCredentialsException: {}", ex.getMessage());
         GenericResponseDTO<String> response = new GenericResponseDTO<>("Invalid username or password", ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
@@ -64,10 +63,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<String> handleAuthenticationException(AuthenticationException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
-    }
+
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<GenericResponseDTO<String>> handleRuntimeException(

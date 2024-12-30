@@ -1,7 +1,6 @@
 package com.example.receipt_backend.controller;
 
 import com.example.receipt_backend.dto.ReceiptDTO;
-import com.example.receipt_backend.dto.request.QueryDTO;
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
@@ -22,33 +21,25 @@ public class ReceiptController {
 
     private final ReceiptService receiptService;
 
-    // Upload receipts
-    @PostMapping("/upload")
-    public ResponseEntity<GenericResponseDTO<String>> uploadReceipts(UploadRequestDTO requestDTO) {
-           receiptService.uploadReceipts(requestDTO);
-            return ResponseEntity.ok( new GenericResponseDTO<>("Receipts uploaded successfully", "200"));
+
+
+//    @GetMapping("/list")
+//    public ResponseEntity<Page<ReceiptDTO>> listReceipts(@RequestBody QueryDTO requestDTO) {
+//        Page<ReceiptDTO> receipts = receiptService.listReceipts(requestDTO);
+//        return ResponseEntity.ok(receipts);
+//    }
+
+
+
+    @PatchMapping("/{receiptId}/approve")
+    public ResponseEntity<ReceiptDTO> approveReceipt(
+            @PathVariable UUID receiptId,
+            @RequestBody Map<String, Object> updatedValues) {
+
+        ReceiptDTO updatedReceipt = receiptService.approveReceipt(receiptId, updatedValues);
+
+        return ResponseEntity.ok(updatedReceipt);
     }
-
-    @GetMapping("/list")
-    public ResponseEntity<Page<ReceiptDTO>> listReceipts(@RequestBody QueryDTO requestDTO) {
-        Page<ReceiptDTO> receipts = receiptService.listReceipts(requestDTO);
-        return ResponseEntity.ok(receipts);
-    }
-
-    @GetMapping("/request/{requestId}")
-    public ResponseEntity<UploadResponseDTO> getReceiptsByRequestId(
-            @PathVariable UUID requestId) {
-        UploadResponseDTO receipts = receiptService.getRequestById(requestId);
-        return ResponseEntity.ok(receipts);
-    }
-
-
-    @PostMapping("/{receiptId}/confirm")
-    public ResponseEntity<GenericResponseDTO<String>> approveReceipt(@PathVariable("receiptId") UUID receiptId) {
-        receiptService.confirmReceipt(receiptId);
-        return ResponseEntity.ok(new GenericResponseDTO<>("Receipt confirmed successfully", "200"));
-    }
-
 
     @GetMapping("/{receiptId}")
     public ResponseEntity<ReceiptDTO> getReceiptByReceiptId(@PathVariable UUID receiptId) {
@@ -56,13 +47,13 @@ public class ReceiptController {
         return ResponseEntity.ok(receiptDTO);
     }
 
-    @PatchMapping("/{receiptId}/ocr")
-    public ResponseEntity<ReceiptDTO> updateOcrData(
-            @PathVariable UUID receiptId,
-            @RequestBody Map<String, String> updatedOcrData) {
-        ReceiptDTO updated = receiptService.updateOcrData(receiptId, updatedOcrData);
-        return ResponseEntity.ok(updated);
-    }
+//    @PatchMapping("/{receiptId}/ocr")
+//    public ResponseEntity<ReceiptDTO> updateOcrData(
+//            @PathVariable UUID receiptId,
+//            @RequestBody Map<String, String> updatedOcrData) {
+//        ReceiptDTO updated = receiptService.updateOcrData(receiptId, updatedOcrData);
+//        return ResponseEntity.ok(updated);
+//    }
 
 
     @DeleteMapping("/{receiptId}")
@@ -71,10 +62,5 @@ public class ReceiptController {
         return ResponseEntity.ok(new GenericResponseDTO<>("Receipt deleted successfully", "200"));
     }
 
-    @GetMapping("/pending")
-    public ResponseEntity<Page<UploadResponseDTO>> getPendingReceipts(Pageable pageable) {
-        Page<UploadResponseDTO> pendingReceipts = receiptService.getPendingRequests(pageable);
-        return ResponseEntity.ok(pendingReceipts);
-    }
 }
 

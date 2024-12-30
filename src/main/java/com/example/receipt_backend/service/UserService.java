@@ -1,9 +1,6 @@
 package com.example.receipt_backend.service;
 import com.example.receipt_backend.dto.UserDTO;
-import com.example.receipt_backend.dto.request.ForgotPasswordRequestDTO;
-import com.example.receipt_backend.dto.request.ResetPasswordRequestDTO;
-import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
-import com.example.receipt_backend.dto.request.VerifyEmailRequestDTO;
+import com.example.receipt_backend.dto.request.*;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.utils.RoleType;
@@ -44,4 +41,5 @@ public interface UserService {
 
     GenericResponseDTO<Boolean> updatePassword(UpdatePasswordRequestDTO updatePasswordRequest);
 
+    void createUserByAdmin(RegisterUserByAdminDto request);
 }

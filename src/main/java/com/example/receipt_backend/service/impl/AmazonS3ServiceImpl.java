@@ -4,6 +4,7 @@ import com.example.receipt_backend.config.AwsProperties;
 import com.example.receipt_backend.service.FileStorageService;
 import com.example.receipt_backend.utils.AppUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;

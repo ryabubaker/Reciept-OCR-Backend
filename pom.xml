@@ -29,6 +29,7 @@
     <properties>
         <java.version>21</java.version>
         <mapstruct.version>1.6.2</mapstruct.version>
+        <lombok.version>1.18.36</lombok.version>
         <jib-maven-plugin.version>3.4.4</jib-maven-plugin.version>
         <lombok-mapstruck-bindings.version>0.2.0</lombok-mapstruck-bindings.version>
     </properties>
@@ -64,6 +65,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -187,16 +189,6 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <version>${jib-maven-plugin.version}</version>
                 <configuration>
-                    <from>
-                        <image>eclipse-temurin:17-jdk-alpine</image>
-                    </from>
-                    <to>
-                        <image>${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:${GITHUB_SHA}</image>
-                        <auth>
-                            <username>${DOCKER_HUB_USERNAME}</username>
-                            <password>${DOCKER_HUB_ACCESS_TOKEN}</password>
-                        </auth>
-                    </to>
                     <container>
                         <mainClass>com.example.ReceiptBackendApplication</mainClass>
                         <env>

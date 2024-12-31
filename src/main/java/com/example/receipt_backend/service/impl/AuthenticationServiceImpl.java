@@ -8,6 +8,7 @@ import com.example.receipt_backend.dto.response.AuthResponseDTO;
 import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.Tenant;
 import com.example.receipt_backend.entity.User;
+import com.example.receipt_backend.exception.BadRequestException;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.repository.RoleRepository;
 import com.example.receipt_backend.repository.TenantRepository;
@@ -21,6 +22,7 @@ import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -57,17 +59,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public AuthResponseDTO loginUser(LoginRequestDTO loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword())
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword())
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String jwtToken = jwtUtils.generateJwtToken(userDetails);
-        AuthResponseDTO auth = new AuthResponseDTO(jwtToken);
-
-        return auth;
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            String jwtToken = jwtUtils.generateJwtToken(userDetails);
+            return new AuthResponseDTO(jwtToken);
+        } catch (BadCredentialsException e) {
+            throw new BadRequestException("Invalid email or password");
+        } catch (Exception e) {
+            throw new BadRequestException("An error occurred during login: " + e.getMessage());
+        }
     }
 }

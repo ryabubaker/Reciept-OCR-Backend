@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) {
+                                    FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
@@ -42,50 +42,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-//                // Determine tenantName based on role
-//                boolean isSystemAdmin = userDetails.getAuthorities().stream()
-//                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_SYSTEM_ADMIN"));
-//
-//                String tenantName;
-//                if (isSystemAdmin) {
-//                    tenantName = "public";
-//                } else {
-//                    tenantName = jwtUtils.getTenantNameFromJwtToken(jwt);
-//                    if (tenantName == null || tenantName.isEmpty()) {
-//                        logger.error("Tenant ID is missing in JWT token for user: {}", email);
-//                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant ID is missing");
-//                        return;
-//                    }
-//                }
-//
-//                CurrentTenantIdentifierResolverImpl.setTenant(tenantName);
-//                logger.debug("Tenant ID set to: {}", tenantName);
-
                 try {
-                    // Extract tenant identifier from request headers, parameters, or other sources
-                    String tenantId =  jwtUtils.getTenantNameFromJwtToken(jwt);
+                    String tenantId = jwtUtils.getTenantNameFromJwtToken(jwt);
                     CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
-                    filterChain.doFilter(request, response);
+                    logger.debug("Tenant ID set to: {}", tenantId);
                 } finally {
                     CurrentTenantIdentifierResolverImpl.clear();
                 }
-
-                // Mark the request as async-safe if needed
-              //  request.setAttribute("isAsync", true); // Set to true for async tasks
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e.getMessage());
         }
 
-
+        // Always proceed with the filter chain
+        filterChain.doFilter(request, response);
     }
-
-    private boolean isAsyncRequest(HttpServletRequest request) {
-        Object asyncFlag = request.getAttribute("isAsync");
-        return Boolean.TRUE.equals(asyncFlag);
-    }
-
-
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
@@ -97,3 +68,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 }
+

@@ -15,8 +15,7 @@ import java.util.UUID;
 @Getter
 @Setter
 public class CustomUserDetails implements OAuth2User, UserDetails {
-    @Serial
-    private final static  long serialVersionUID = 1L;
+  ;
 
     private String email;
     private String password;

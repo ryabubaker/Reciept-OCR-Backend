@@ -24,9 +24,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Table(name = "users", schema = "public")
-public class User extends AbstractGenericPKAuditableEntity implements Serializable {
-    @Serial
-    private final static  long serialVersionUID = 1L;
+public class User extends AbstractGenericPKAuditableEntity {
 
     @Column(name = "username", nullable = false, unique = true)
     private String username;

@@ -32,6 +32,16 @@ public class WebSecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsServiceImpl customUserDetailsService;
+
+    private static final String[] WHITE_LIST_URLS = {
+            "/auth/**",
+            "/oauth2/**",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/swagger-resources/**",
+            "/webjars/**"
+    };
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -41,7 +51,7 @@ public class WebSecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(unauthorizedHandler ))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/oauth2/**").permitAll()
+                        .requestMatchers(WHITE_LIST_URLS).permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(
                         oauth2 -> oauth2

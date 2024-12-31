@@ -61,8 +61,9 @@ jobs:
           ./mvnw ${MAVEN_ARGS} clean compile jib:build \
             -Djib.to.auth.username=${{ secrets.DOCKER_HUB_USERNAME }} \
             -Djib.to.auth.password=${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
   deploy:
-    needs: build
+    needs: build-and-publish
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 

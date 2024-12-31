@@ -55,11 +55,7 @@ jobs:
 
       - name: Deploy to Koyeb
         run: |
-          koyeb service redeploy ${KOYEB_APP_NAME}/${KOYEB_SERVICE_NAME} \
-            --image ${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE_NAME}:${GITHUB_SHA}
+          koyeb service redeploy ${KOYEB_APP_NAME}/${KOYEB_SERVICE_NAME}
         env:
-          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-          DOCKER_IMAGE_NAME: ${{ secrets.IMAGE_NAME}}
-          GITHUB_SHA: ${{ github.sha }}
           KOYEB_APP_NAME: ${{ secrets.KOYEB_APP_NAME }}
           KOYEB_SERVICE_NAME: ${{ secrets.KOYEB_SERVICE_NAME }}

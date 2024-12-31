@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,7 +24,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Table(name = "users", schema = "public")
-public class User extends AbstractGenericPKAuditableEntity {
+public class User extends AbstractGenericPKAuditableEntity implements Serializable {
+    @Serial
+    private final static  long serialVersionUID = 1L;
 
     @Column(name = "username", nullable = false, unique = true)
     private String username;

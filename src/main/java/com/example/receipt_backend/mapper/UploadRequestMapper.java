@@ -3,8 +3,6 @@ package com.example.receipt_backend.mapper;
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
 import com.example.receipt_backend.entity.UploadRequest;
-import net.minidev.json.writer.ArraysMapper;
-import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -13,6 +11,9 @@ public interface UploadRequestMapper {
 
     @Mapping(target = "receipts", ignore = true)
     @Mapping(target="status", ignore = true)
+    @Mapping(target = "requestId", ignore = true)
+    @Mapping(target = "uploadedBy", ignore = true)
+    @Mapping(target = "uploadedAt", ignore = true)
     UploadRequest toEntity(UploadRequestDTO dto);
 
 

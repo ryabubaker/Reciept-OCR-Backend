@@ -16,6 +16,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 public abstract class AbstractDefaultEmailService {
@@ -59,7 +60,7 @@ public abstract class AbstractDefaultEmailService {
         // templateText = "Hello \n%s\n, \n This is the default fallback test email template for you. \n Send By: %s \n";
         // String[] templateModel = { "TestUser", "Spring-boot-app" };
 
-        String text = String.format(simpleMailMessage.getText(), templateModel);
+        String text = String.format(Objects.requireNonNull(simpleMailMessage.getText()), (Object) templateModel);
         sendSimpleMessage(destinationEmail, subject, text);
     }
 
@@ -107,10 +108,8 @@ public abstract class AbstractDefaultEmailService {
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
             log.error("sendMessageUsingFreemarkerTemplate failed MessagingException {} ", e.getMessage());
-            e.printStackTrace();
         } catch (Exception e) {
             log.error("sendMessageUsingFreemarkerTemplate failed Exception {} ", e.getMessage());
-            e.printStackTrace();
         }
     }
 

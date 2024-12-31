@@ -35,13 +35,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(PersistentObjectException.class)
-    public ResponseEntity<GenericResponseDTO> handlePersistentObjectException(PersistentObjectException ex) {
-        GenericResponseDTO response = new GenericResponseDTO("Database Error", "A database error occurred.");
+    public ResponseEntity<GenericResponseDTO<String>> handlePersistentObjectException(PersistentObjectException ex) {
+        GenericResponseDTO<String> response = new GenericResponseDTO<>("Database Error", "A database error occurred.");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<GenericResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
-        GenericResponseDTO response = new GenericResponseDTO("Invalid Input", ex.getMessage());
+    public ResponseEntity<GenericResponseDTO<String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        GenericResponseDTO<String> response = new GenericResponseDTO<>("Invalid Input", ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 

@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.io.Serial;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +15,8 @@ import java.util.UUID;
 @Getter
 @Setter
 public class CustomUserDetails implements OAuth2User, UserDetails {
+    @Serial
+    private final static  long serialVersionUID = 1L;
 
     private String email;
     private String password;

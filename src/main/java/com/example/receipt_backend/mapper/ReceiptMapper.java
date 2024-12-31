@@ -19,10 +19,13 @@ public interface ReceiptMapper {
 
     @Mapping(target = "receiptTypeName", source = "receiptType.name")
     @Mapping(target = "approvedBy", source = "approvedBy.id")
-    ReceiptDTO
-    toDTO(Receipt receipt);
+    ReceiptDTO toDTO(Receipt receipt);
 
     @Mapping(target = "request", source = "uploadRequest")
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "receiptId", ignore = true)
+    @Mapping(target = "ocrData", ignore = true)
+    @Mapping(target = "approvedBy", ignore = true)
+    @Mapping(target = "approvedAt", ignore = true)
     Receipt toEntity(String imageUrl, UploadRequest uploadRequest, ReceiptType receiptType);
 }

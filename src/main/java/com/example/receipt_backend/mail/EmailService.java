@@ -25,7 +25,6 @@ import java.util.Map;
 @Async
 public class EmailService extends AbstractDefaultEmailService {
 
-    private String defaultSourceEmailAddress;
     private String officialCompanyName;
     private String officialCompanyDomain;
 
@@ -45,8 +44,6 @@ public class EmailService extends AbstractDefaultEmailService {
 
     @PostConstruct
     protected void init() {
-        Instant now = Instant.now();
-        defaultSourceEmailAddress = appProperties.getMail().getDefaultEmailAddress();
         officialCompanyName = appProperties.getOfficialCompanyName();
         officialCompanyDomain = appProperties.getOfficialCompanyDomain();
     }
@@ -87,10 +84,8 @@ public class EmailService extends AbstractDefaultEmailService {
             log.info("Completed: sendVerificationEmail ");
         } catch (MessagingException e) {
             log.error("sendWelcomeEmail failed MessagingException {} ", e.getMessage());
-            e.printStackTrace();
         } catch (Exception e) {
             log.error("sendWelcomeEmail failed Exception {} ", e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -130,10 +125,8 @@ public class EmailService extends AbstractDefaultEmailService {
             log.info("Completed: sendPasswordResetEmail ");
         } catch (MessagingException e) {
             log.error("sendPasswordResetEmail failed MessagingException {} ", e.getMessage());
-            e.printStackTrace();
         } catch (Exception e) {
             log.error("sendPasswordResetEmail failed Exception {} ", e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -173,10 +166,8 @@ public class EmailService extends AbstractDefaultEmailService {
             log.info("Completed: sendWelcomeEmail ");
         } catch (MessagingException e) {
             log.error("sendWelcomeEmail failed MessagingException {} ", e.getMessage());
-            e.printStackTrace();
         } catch (Exception e) {
             log.error("sendWelcomeEmail failed Exception {} ", e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -216,10 +207,8 @@ public class EmailService extends AbstractDefaultEmailService {
             log.info("Completed: sendWelcomeEmailWithPassword ");
         } catch (MessagingException e) {
             log.error("sendWelcomeEmailWithPassword failed MessagingException {} ", e.getMessage());
-            e.printStackTrace();
         } catch (Exception e) {
             log.error("sendWelcomeEmailWithPassword failed Exception {} ", e.getMessage());
-            e.printStackTrace();
         }
     }
 

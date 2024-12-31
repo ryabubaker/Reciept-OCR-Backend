@@ -44,31 +44,22 @@ jobs:
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   # ---- Deploy Job ----
-  deploy:
+  deploy-to-koyeb:
     needs: build-and-dockerize
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Koyeb
-        uses: koyeb/actions/deploy@v1
+      - name: Install and configure the Koyeb CLI
+        uses: koyeb-community/koyeb-actions@v2
         with:
-          app_id: ${{ secrets.KOYEB_APP_ID }}
-          api_key: ${{ secrets.KOYEB_API_KEY }}
-          image: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:latest
-          envs: |
-            PORT=${{ secrets.PORT }}
-            SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
-            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
-            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-            MAIL_HOST=${{ secrets.MAIL_HOST }}
-            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-            MAIL_PORT=${{ secrets.MAIL_PORT }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
-            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
-            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
-            AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
-            AWS_REGION=${{ secrets.AWS_REGION }}
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET }}
-            JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+          api_token: "${{ secrets.KOYEB_API_TOKEN }}"
+
+      - name: Deploy to Koyeb
+        run: |
+          koyeb service redeploy ${KOYEB_APP_NAME}/${KOYEB_SERVICE_NAME} \
+            --image ${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE_NAME}:${GITHUB_SHA}
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_IMAGE_NAME: ${{ secrets.IMAGE_NAME}}
+          GITHUB_SHA: ${{ github.sha }}
+          KOYEB_APP_NAME: ${{ secrets.KOYEB_APP_NAME }}
+          KOYEB_SERVICE_NAME: ${{ secrets.KOYEB_SERVICE_NAME }}

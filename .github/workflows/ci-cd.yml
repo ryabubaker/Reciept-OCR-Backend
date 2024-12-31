@@ -1,5 +1,4 @@
 name: CI/CD Pipeline
-
 on:
   push:
     branches:
@@ -7,12 +6,10 @@ on:
   pull_request:
     branches:
       - master
-
 jobs:
-  # ---- Build Job ----
-  build:
+  # ---- Build and Dockerize Job ----
+  build-and-dockerize:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -31,7 +28,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      - name: Build with Maven
+      - name: Build and compile
         run: mvn clean compile --no-transfer-progress -DskipTests
 
       - name: Log in to Docker Hub
@@ -48,9 +45,8 @@ jobs:
 
   # ---- Deploy Job ----
   deploy:
-    needs: dockerize  # Wait for the 'dockerize' job to complete
+    needs: build-and-dockerize
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy to Koyeb
         uses: koyeb/actions/deploy@v1

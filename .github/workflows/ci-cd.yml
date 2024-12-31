@@ -30,6 +30,9 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: 'maven'
 
+      - name: Make Maven wrapper executable
+        run: chmod +x ./mvnw
+
       - name: Run tests
         run: ./mvnw ${MAVEN_ARGS} clean verify
 
@@ -94,54 +97,6 @@ jobs:
                 {
                   "key": "SPRING_DATASOURCE_PASSWORD",
                   "value": "${{ secrets.SPRING_DATASOURCE_PASSWORD }}"
-                },
-                {
-                  "key": "MAIL_HOST",
-                  "value": "${{ secrets.MAIL_HOST }}"
-                },
-                {
-                  "key": "MAIL_USERNAME",
-                  "value": "${{ secrets.MAIL_USERNAME }}"
-                },
-                {
-                  "key": "MAIL_PASSWORD",
-                  "value": "${{ secrets.MAIL_PASSWORD }}"
-                },
-                {
-                  "key": "MAIL_PORT",
-                  "value": "${{ secrets.MAIL_PORT }}"
-                },
-                {
-                  "key": "GOOGLE_CLIENT_ID",
-                  "value": "${{ secrets.GOOGLE_CLIENT_ID }}"
-                },
-                {
-                  "key": "GOOGLE_CLIENT_SECRET",
-                  "value": "${{ secrets.GOOGLE_CLIENT_SECRET }}"
-                },
-                {
-                  "key": "GOOGLE_REDIRECT_URI",
-                  "value": "${{ secrets.GOOGLE_REDIRECT_URI }}"
-                },
-                {
-                  "key": "AWS_ACCESS_KEY",
-                  "value": "${{ secrets.AWS_ACCESS_KEY }}"
-                },
-                {
-                  "key": "AWS_SECRET_KEY",
-                  "value": "${{ secrets.AWS_SECRET_KEY }}"
-                },
-                {
-                  "key": "AWS_S3_BUCKET",
-                  "value": "${{ secrets.AWS_S3_BUCKET }}"
-                },
-                {
-                  "key": "AWS_REGION",
-                  "value": "${{ secrets.AWS_REGION }}"
-                },
-                {
-                  "key": "JWT_SECRET",
-                  "value": "${{ secrets.JWT_SECRET }}"
                 }
               ],
               "resources": {

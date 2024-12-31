@@ -57,7 +57,7 @@ jobs:
         with:
           app_id: ${{ secrets.KOYEB_APP_ID }}
           api_key: ${{ secrets.KOYEB_API_KEY }}
-          image: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ IMAGE_NAME }}:latest
+          image: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:latest
           envs: |
             PORT=${{ secrets.PORT }}
             SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}

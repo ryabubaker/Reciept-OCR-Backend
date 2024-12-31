@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain) {
         try {
             String jwt = parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
@@ -82,7 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isAsyncRequest(HttpServletRequest request) {
         Object asyncFlag = request.getAttribute("isAsync");
-        return asyncFlag != null && Boolean.TRUE.equals(asyncFlag);
+        return Boolean.TRUE.equals(asyncFlag);
     }
 
 

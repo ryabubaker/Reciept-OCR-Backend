@@ -1,65 +1,80 @@
 server:
-  port: 8080
-
+  port: ${PORT:8080}
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/receipt_db
-    username: postgres
-    password: root
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
-
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 15
+      idle-timeout: 300000
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration/public
+    default-schema: public
   jpa:
-    hibernate:
-      ddl-auto: none
     properties:
       hibernate:
         multiTenancy: SCHEMA
-        tenant-identifier-resolver: com.example.receipt_backend.config.TenantIdentifierResolver
-        multi-tenancy-strategy: org.hibernate.context.internal.ManagedSessionContext
-    show-sql: true
+        format_sql: true
+        use_sql_comments: true
+    show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  #Mail Config
+    open-in-view: false
+
   mail:
     properties:
       mail:
         smtp:
           starttls:
-            enable: 'true'
-          timeout: '5000'
-          auth: 'true'
-          connectiontimeout: '5000'
-          writetimeout: '5000'
-    host: smtp.gmail.com
-    username: ryabubaker@gmail.com
-    password: hvmt tmpl edwm nrpn # Google Account, Search "App Passwords", generate password
-    port: '587'
-
-  # freemarker config - used for email templates
+            enable: true
+          timeout: 5000
+          auth: true
+          connectiontimeout: 5000
+          writetimeout: 5000
+    host: ${MAIL_HOST}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    port: ${MAIL_PORT:587}
   freemarker:
     template-loader-path: classpath:/mail-templates
     suffix: .ftl
 
-  # OAuth2
   security:
     oauth2:
       client:
         registration:
           google:
-            clientId: 31208289924-hsjju4lthvnslo9v1thdo22863c840ar.apps.googleusercontent.com
-            clientSecret: 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
-            redirectUri: "http://localhost:8080/oauth2/callback/google"
+            clientId: ${GOOGLE_CLIENT_ID}
+            clientSecret: ${GOOGLE_CLIENT_SECRET}
+            redirectUri: ${GOOGLE_REDIRECT_URI}
             scope: email, profile
+#          facebook:
+#            clientId: ${FACEBOOK_CLIENT_ID}
+#            clientSecret: ${FACEBOOK_CLIENT_SECRET}
+#            redirectUri: ${FACEBOOK_REDIRECT_URI}
+#            scope: email, public_profile
 
-          facebook:
-            clientId: <<ClientID>>
-            clientSecret: <<ClientSecret>>
-            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}"
-            scope: email, public_profile
+aws:
+  access: ${AWS_ACCESS_KEY}
+  secret: ${AWS_SECRET_KEY}
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    region: ${AWS_REGION}
+
 # logging config
 logging:
   level:
     root: INFO
     org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql: TRACE
       springframework:
         web: DEBUG
         security: DEBUG
@@ -68,17 +83,12 @@ myapp:
 
   appName: spring security OAuth2 and JWT starter example
   officialCompanyName: XYZ-Company Inc.
-  officialCompanyDomain: http://localhost:8080
+  officialCompanyDomain: https://example.com
+  tenant-migration-location: classpath:db/migration/tenant
 
   mail:
     defaultEmailAddress: example@gmail.com
     verificationCodeExpirationSeconds: 1800 # 30 minutes
-
-  jwt:
-    secretKey: ZgJMpWC8hbevhCFXbO5LYviOJUW8yaCy3QpyW4VRYuexeAgBXLsKSSR1Ca88JMRA
-    isSecretKeyBase64Encoded: false
-    expirationMillis: 3600000
-    shortLivedMillis: 120000
 
   cors:
     allowedOrigins: http://localhost:8080,http://localhost:4200
@@ -89,3 +99,12 @@ myapp:
   defaults:
     defaultPageStart: 0
     defaultPageSize: 50
+
+  jwtSecret: ${JWT_SECRET_KEY}
+  jwtExpirationMs: 86400000
+
+  template:
+    base-directory: src/main/resources/templates/
+
+  ocr:
+    base-url: http://127.0.0.1:5000

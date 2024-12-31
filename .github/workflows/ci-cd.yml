@@ -32,12 +32,9 @@ jobs:
             ${{ runner.os }}-m2-
 
       - name: Build with Maven
-        run: mvn clean package --no-transfer-progress
+        run: mvn clean package --no-transfer-progress -P test
         env:
           PORT: 8080
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
-          SPRING_DATASOURCE_USERNAME: testuser
-          SPRING_DATASOURCE_PASSWORD: testpassword
           MAIL_HOST: smtp.example.com
           MAIL_USERNAME: test@example.com
           MAIL_PASSWORD: password123

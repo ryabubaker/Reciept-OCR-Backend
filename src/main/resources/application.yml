@@ -1,5 +1,7 @@
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: framework
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL}
@@ -90,8 +92,10 @@ myapp:
     defaultEmailAddress: example@gmail.com
     verificationCodeExpirationSeconds: 1800 # 30 minutes
 
+
   cors:
-    allowedOrigins: http://localhost:8080,http://localhost:4200
+    allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:8080}
+
 
   oauth2:
     authorizedRedirectOrigins: http://localhost:8080,http://localhost:4200

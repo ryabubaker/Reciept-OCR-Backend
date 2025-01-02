@@ -10,7 +10,8 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 1. receipt_type Table
 CREATE TABLE receipt_type (
-                              name VARCHAR(255) PRIMARY KEY,
+                              receipt_type_id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+                              name VARCHAR(255) NOT NULL,
                               template_path VARCHAR(1024) NOT NULL
 );
 
@@ -29,7 +30,7 @@ CREATE TABLE upload_requests (
 -- 3. receipt Table
 CREATE TABLE receipt (
                          receipt_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                         receipt_type_name VARCHAR(255) NOT NULL,
+                         receipt_type_id VARCHAR(255) NOT NULL,
                          request_id UUID NOT NULL,
                          image_url VARCHAR(1024) NOT NULL,
                          status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
@@ -37,8 +38,8 @@ CREATE TABLE receipt (
                          approved_by_user_id UUID,
                          approved_at TIMESTAMP WITHOUT TIME ZONE,
                          CONSTRAINT fk_receipt_receipt_type
-                             FOREIGN KEY(receipt_type_name)
-                                 REFERENCES receipt_type(name)
+                             FOREIGN KEY(receipt_type_id)
+                                 REFERENCES receipt_type(receipt_type_id)
                                  ON DELETE CASCADE,
                          CONSTRAINT fk_receipt_upload_request
                              FOREIGN KEY(request_id)
@@ -54,8 +55,9 @@ CREATE TABLE receipt (
 -- Create Indexes for Foreign Keys
 -- ==========================================
 
--- Index for receipt_type_name in receipt
-CREATE INDEX idx_receipt_receipt_type_name ON receipt(receipt_type_name);
+-- Index for receipt_type_id
+-- in receipt
+CREATE INDEX idx_receipt_receipt_type_id ON receipt(receipt_type_id);
 
 -- Index for request_id in receipt
 CREATE INDEX idx_receipt_request_id ON receipt(request_id);

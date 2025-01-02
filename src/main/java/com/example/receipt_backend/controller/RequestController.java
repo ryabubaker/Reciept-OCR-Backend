@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -23,6 +24,7 @@ public class RequestController {
     private final ReceiptService receiptService;
 
     @PostMapping("/upload")
+    @PreAuthorize("hasRole('ROLE_MOBILE_USER')")
     @Operation(summary = "Upload Receipts", description = "Uploads receipts based on the provided request data")
     public ResponseEntity<GenericResponseDTO<String>> uploadRequest(
             @Parameter(description = "Data for uploading receipts") UploadRequestDTO requestDTO) {

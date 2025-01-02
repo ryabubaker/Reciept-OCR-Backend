@@ -31,11 +31,11 @@ public class Receipt {
 
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "request_id")
+    @JoinColumn(name = "request_id", nullable = false)
     private UploadRequest request;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receipt_type_name", nullable = false)
+    @JoinColumn(name = "receipt_type_id", nullable = false)
     private ReceiptType receiptType;
 
     @Column(name = "image_url", nullable = false)
@@ -48,7 +48,7 @@ public class Receipt {
     @Convert(converter = ListMapToJsonConverter.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "ocr_data", columnDefinition = "jsonb")
-    private List<Map<String, String>> ocrData;
+    private List<Map<Integer, String>> ocrData;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by_user_id")

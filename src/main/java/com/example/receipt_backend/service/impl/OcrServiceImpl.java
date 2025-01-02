@@ -32,9 +32,7 @@ import java.util.stream.Collectors;
 public class OcrServiceImpl implements OcrService {
 
     private final OcrClient ocrClient;
-    private final FileStorageService storageService;
     private final ReceiptRepository receiptRepository;
-    private final UploadRequestRepository uploadRequestRepository;
 
     /**
      * Asynchronously processes a receipt by performing OCR and updating the receipt status.
@@ -74,7 +72,7 @@ public class OcrServiceImpl implements OcrService {
             throw new BadRequestException("OCR service returned unsuccessful status.");
         }
 
-        List<Map<String, String>> extractedData = ocrResponse.getData().stream()
+        List<Map<Integer, String>> extractedData = ocrResponse.getData().stream()
                 .map(this::convertOcrResultToMap)
                 .collect(Collectors.toList());
 
@@ -139,9 +137,9 @@ public class OcrServiceImpl implements OcrService {
      * @param ocrResult The OCR result to convert.
      * @return A map containing label-text pairs.
      */
-    private Map<String, String> convertOcrResultToMap(OcrResult ocrResult) {
-        Map<String, String> map = new HashMap<>();
-        map.put(ocrResult.getLabel(), ocrResult.getText());
+    private Map<Integer, String> convertOcrResultToMap(OcrResult ocrResult) {
+        Map<Integer, String> map = new HashMap<>();
+        map.put(ocrResult.getId(), ocrResult.getText());
         return map;
     }
 }

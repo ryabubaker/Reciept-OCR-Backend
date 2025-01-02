@@ -10,6 +10,6 @@ import java.util.Map;
 @Builder
 public class ReceiptProcessingResult {
     private boolean success;
-    private List<Map<String, String>> extractedData;
+    private List<Map<Integer, String>> extractedData;
     private String error;
 }

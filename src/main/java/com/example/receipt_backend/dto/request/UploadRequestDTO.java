@@ -10,6 +10,6 @@ import java.util.UUID;
 @Data
 public class UploadRequestDTO {
     private MultipartFile[] files;
-    private String receiptTypeName;
+    private String receiptTypeId;
 }
 

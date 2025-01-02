@@ -41,21 +41,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         userDetails.getAuthorities());
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                try {
-                    String tenantId = jwtUtils.getTenantNameFromJwtToken(jwt);
-                    CurrentTenantIdentifierResolverImpl.setTenant(tenantId);
-                    logger.debug("Tenant ID set to: {}", tenantId);
-                } finally {
-                    CurrentTenantIdentifierResolverImpl.clear();
+                // Determine tenantName based on role
+                boolean isSystemAdmin = userDetails.getAuthorities().stream()
+                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_SYSTEM_ADMIN"));
+                String tenantName;
+                if (isSystemAdmin) {
+                    tenantName = "public";
+                } else {
+                    tenantName = jwtUtils.getTenantNameFromJwtToken(jwt);
+                    if (tenantName == null || tenantName.isEmpty()) {
+                        logger.error("Tenant ID is missing in JWT token for user: {}", email);
+                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant ID is missing");
+                        return;
+                    }
                 }
+                CurrentTenantIdentifierResolverImpl.setTenant(tenantName);
+                logger.debug("Tenant ID set to: {}", tenantName);
+
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e.getMessage());
         }
 
-        // Always proceed with the filter chain
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+
+        } finally {
+            CurrentTenantIdentifierResolverImpl.clear();
+        }
     }
 
     private String parseJwt(HttpServletRequest request) {

@@ -19,11 +19,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -108,11 +110,16 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<String> getAllReceiptTypes() {
+    public List<Map<String, ? extends Serializable>> getAllReceiptTypes() {
         List<ReceiptType> receiptTypes = receiptTypeRepository.findAll();
-        return receiptTypes.stream()
-                .map(ReceiptType::getName)
+        List<Map<String, ? extends Serializable>> collect = receiptTypes.stream()
+                .map(receiptType ->
+                        Map.of(
+                                "receiptTypeId", receiptType.getReceiptTypeId().toString(),
+                                "name", receiptType.getName()))
                 .collect(Collectors.toList());
+
+        return collect;
     }
 
     @Transactional

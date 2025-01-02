@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OcrResult {
-    private String label;
+    private Integer id;
     private String text;
 }

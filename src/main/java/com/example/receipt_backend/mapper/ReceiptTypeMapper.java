@@ -15,11 +15,12 @@ import static com.example.receipt_backend.utils.AppUtils.fromJson;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ReceiptTypeMapper {
-
+    @Mapping(target = "receiptTypeId", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "templatePath", ignore = true)
     ReceiptType toEntity(ReceiptTypeRequestDTO receiptTypeRequestDTO);
 
+    @Mapping(target = "receiptTypeId", source = "receiptTypeId")
     @Mapping(target = "template", source = "templatePath", qualifiedByName = "readTemplateFile")
     ReceiptTypeResponseDTO toResponseDTO(ReceiptType receiptType);
 

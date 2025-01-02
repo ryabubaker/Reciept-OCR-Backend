@@ -68,7 +68,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                         String s3Key = s3Service.uploadFile(file, tenantId, requestId.toString());
                         String imageUrl = s3Service.getFileUrl(s3Key);
                         // Create Receipt entity
-                        ReceiptType receiptType = receiptTypeRepository.findByName(uploadRequestDto.getReceiptTypeName()).orElseThrow(
+                        ReceiptType receiptType = receiptTypeRepository.findById(UUID.fromString(uploadRequestDto.getReceiptTypeId())).orElseThrow(
                                 () -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND)
                         );
                         return receiptMapper.toEntity(imageUrl, savedRequest, receiptType);
@@ -99,7 +99,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
 
         // 3) Update the values in receipt.ocrData
-        List<Map<String, String>> currentOcrData = receipt.getOcrData();
+        List<Map<Integer, String>> currentOcrData = receipt.getOcrData();
 
         receipt.setOcrData(currentOcrData);
 

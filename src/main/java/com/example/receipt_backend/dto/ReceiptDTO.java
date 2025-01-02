@@ -15,7 +15,7 @@ public class ReceiptDTO {
     private String receiptTypeName;
     private String imageUrl;
     private ReceiptStatus status;
-    private List<Map<String, String>> ocrData;
+    private List<Map<Integer, String>> ocrData;
     private UUID approvedBy;
     private String approvedAt;
 }

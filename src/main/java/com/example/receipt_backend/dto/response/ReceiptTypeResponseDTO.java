@@ -9,6 +9,8 @@ import java.util.UUID;
 
 @Data
 public class ReceiptTypeResponseDTO {
+    private String receiptTypeId;
+
     private String name;
 
     private Map<String, Object> template;

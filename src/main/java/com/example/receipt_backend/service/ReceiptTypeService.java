@@ -8,7 +8,9 @@ import com.example.receipt_backend.dto.response.ReceiptTypeResponseDTO;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 public interface ReceiptTypeService {
 
@@ -19,7 +21,7 @@ public interface ReceiptTypeService {
     ReceiptTypeResponseDTO getReceiptTypeByName(String receiptTypeName);
 
     @Transactional(readOnly = true)
-    List<String> getAllReceiptTypes();
+    List<Map<String, ? extends Serializable>> getAllReceiptTypes();
 
     @Transactional
     ReceiptTypeResponseDTO updateReceiptType(String receiptTypeName, ReceiptTypeUpdateRequestDTO requestDTO) throws IOException;

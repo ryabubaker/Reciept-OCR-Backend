@@ -17,6 +17,10 @@ import java.util.UUID;
 @Builder
 public class ReceiptType {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "receipt_type_id", unique = true, nullable = false)
+    private UUID receiptTypeId;
+
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 

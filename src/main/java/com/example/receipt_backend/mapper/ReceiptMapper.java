@@ -17,7 +17,7 @@ public interface ReceiptMapper {
     @Named("mapReceiptsToDTOs")
     List<ReceiptDTO> mapReceiptsToDTOs(List<Receipt> receipts);
 
-    @Mapping(target = "receiptTypeName", source = "receiptType.name")
+    @Mapping(target = "receiptTypeId", source = "receiptType.receiptTypeId")
     @Mapping(target = "approvedBy", source = "approvedBy.id")
     ReceiptDTO toDTO(Receipt receipt);
 

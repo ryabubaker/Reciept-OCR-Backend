@@ -12,7 +12,7 @@ import java.util.UUID;
 @Data
 public class ReceiptDTO {
     private UUID receiptId;
-    private String receiptTypeName;
+    private String receiptTypeId;
     private String imageUrl;
     private ReceiptStatus status;
     private List<Map<Integer, String>> ocrData;

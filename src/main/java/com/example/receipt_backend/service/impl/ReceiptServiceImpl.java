@@ -20,12 +20,13 @@ import com.example.receipt_backend.service.ReceiptService;
 import com.example.receipt_backend.utils.ReceiptStatus;
 import com.example.receipt_backend.utils.RequestStatus;
 import com.example.receipt_backend.websocket.WebSocketNotificationService;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -154,8 +155,10 @@ public class ReceiptServiceImpl implements ReceiptService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UploadResponseDTO> getPendingRequests(Pageable pageable) {
-        return uploadRequestRepository.findByStatus(RequestStatus.PENDING, pageable).map(uploadRequestMapper::toResponseDTO);
+        return uploadRequestRepository.findByStatus(RequestStatus.PENDING, pageable)
+                .map(uploadRequestMapper::toResponseDTO);
     }
 
 

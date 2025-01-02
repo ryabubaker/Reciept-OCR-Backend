@@ -11,24 +11,24 @@ import java.util.List;
 import java.util.Map;
 
 @Converter(autoApply = false)
-public class ListMapToJsonConverter implements AttributeConverter<List<Map<String, String>>, String> {
+public class ListMapToJsonConverter implements AttributeConverter<List<Map<Integer, String>>, String> {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public String convertToDatabaseColumn(List<Map<String, String>> attribute) {
+    public String convertToDatabaseColumn(List<Map<Integer, String>> attribute) {
         if (attribute == null || attribute.isEmpty()) {
             return "[]";
         }
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("Error converting List<Map<String, String>> to JSON", e);
+            throw new IllegalArgumentException("Error converting List<Map<Integer, String>> to JSON", e);
         }
     }
 
     @Override
-    public List<Map<String, String>> convertToEntityAttribute(String dbData) {
+    public List<Map<Integer, String>> convertToEntityAttribute(String dbData) {
         if (dbData == null || dbData.isEmpty()) {
             return List.of();
         }

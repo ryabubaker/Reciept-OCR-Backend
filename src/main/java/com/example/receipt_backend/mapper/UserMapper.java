@@ -16,6 +16,8 @@ public interface UserMapper {
     User toEntity(UserDTO dto);
 
     @Mapping(target = "roles", source = "roles", qualifiedByName = "mapRolesToStrings")
+    @Mapping(target = "tenantId", source = "tenant.tenantId")
+    @Mapping(target = "tenantName",  source = "tenant.tenantName")
     UserDTO toDto(User entity);
 
     @Mapping(target = "registeredProviderName", constant = "local")
@@ -26,5 +28,6 @@ public interface UserMapper {
     List<UserDTO> toDtoList(List<User> list);
 
     @Mapping(target = "roles", source = "roles", qualifiedByName = "mapStringsToRoles")
+
     void updateEntity(UserDTO reqUserDTO, @MappingTarget User user);
 }

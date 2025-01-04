@@ -19,7 +19,10 @@ import java.util.UUID;
 public class UserDTO {
 
     private UUID id;
+
     private String tenantId;
+
+    private String tenantName;
 
     private String username;
 
@@ -40,7 +43,7 @@ public class UserDTO {
 
     private String registeredProviderId;
 
-    private LocalDateTime createdDate;
+    private String createdDate;
 
-    private LocalDateTime lastModifiedDate;
+    private String lastModifiedDate;
 }

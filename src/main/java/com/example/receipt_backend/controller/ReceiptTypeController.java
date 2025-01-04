@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
+
 @RestController
 @RequestMapping("/receipt-types")
 @RequiredArgsConstructor
@@ -35,12 +37,12 @@ public class ReceiptTypeController {
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
-    @GetMapping("/{name}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
     @Operation(summary = "Get receipt type by name", description = "Retrieve a specific receipt type by its Name")
-    public ResponseEntity<ReceiptTypeResponseDTO> getReceiptTypeByName(
-            @PathVariable String name) {
-        ReceiptTypeResponseDTO responseDTO = receiptTypeService.getReceiptTypeById(name);
+    public ResponseEntity<ReceiptTypeResponseDTO> getReceiptTypeById(
+            @PathVariable String id) {
+        ReceiptTypeResponseDTO responseDTO = receiptTypeService.getReceiptTypeById(id);
         return ResponseEntity.ok(responseDTO);
     }
 
@@ -52,22 +54,22 @@ public class ReceiptTypeController {
         return ResponseEntity.ok(receiptTypes);
     }
 
-    @PatchMapping("/{currentName}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Update a receipt type", description = "Allows a company admin to update an existing receipt type")
     public ResponseEntity<ReceiptTypeResponseDTO> updateReceiptType(
-            @PathVariable String currentName,
+            @PathVariable String id,
             @Valid @RequestBody ReceiptTypeUpdateRequestDTO requestDTO) throws IOException {
-        ReceiptTypeResponseDTO receiptTypeResponseDTO = receiptTypeService.updateReceiptType(currentName, requestDTO);
+        ReceiptTypeResponseDTO receiptTypeResponseDTO = receiptTypeService.updateReceiptType(id, requestDTO);
         return ResponseEntity.ok(receiptTypeResponseDTO);
     }
 
-    @DeleteMapping("/{name}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Delete a receipt type", description = "Allows a company admin to delete a receipt type")
     public ResponseEntity<GenericResponseDTO<String>> deleteReceiptType(
-            @PathVariable String name) throws IOException {
-        receiptTypeService.deleteReceiptType(name);
+            @PathVariable String id) throws IOException {
+        receiptTypeService.deleteReceiptType(id);
         return ResponseEntity.ok(new GenericResponseDTO<>("Receipt type deleted successfully", "200"));
     }
 

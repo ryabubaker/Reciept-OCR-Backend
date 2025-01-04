@@ -17,8 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -84,8 +82,8 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
     }
 
     @Override
-    public ReceiptTypeResponseDTO updateReceiptType(String currentReceiptTypeName, ReceiptTypeUpdateRequestDTO updateDto) throws IOException {
-        ReceiptType existing = receiptTypeRepository.findByName(currentReceiptTypeName)
+    public ReceiptTypeResponseDTO updateReceiptType(String receiptTypeId, ReceiptTypeUpdateRequestDTO updateDto) throws IOException {
+        ReceiptType existing = receiptTypeRepository.findById(UUID.fromString(receiptTypeId))
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
 
         try {

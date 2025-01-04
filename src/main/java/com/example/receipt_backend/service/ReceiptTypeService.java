@@ -18,14 +18,14 @@ public interface ReceiptTypeService {
     ReceiptTypeResponseDTO createReceiptType(ReceiptTypeRequestDTO dto) throws IOException;
 
     @Transactional(readOnly = true)
-    ReceiptTypeResponseDTO getReceiptTypeByName(String receiptTypeName);
+    ReceiptTypeResponseDTO getReceiptTypeById(String receiptTypeId);
 
     @Transactional(readOnly = true)
     List<Map<String, ? extends Serializable>> getAllReceiptTypes();
 
     @Transactional
-    ReceiptTypeResponseDTO updateReceiptType(String receiptTypeName, ReceiptTypeUpdateRequestDTO requestDTO) throws IOException;
+    ReceiptTypeResponseDTO updateReceiptType(String receiptTypeId, ReceiptTypeUpdateRequestDTO requestDTO) throws IOException;
 
     @Transactional
-    void deleteReceiptType(String receiptTypeName) throws IOException;
+    void deleteReceiptType(String receiptTypeId) throws IOException;
 }

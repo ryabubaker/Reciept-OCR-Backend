@@ -6,11 +6,12 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Schema(description = "DTO for updating a receipt type")
 public class ReceiptTypeUpdateRequestDTO {
     private String name;
 
-    private MultipartFile template;
+    private Map<String, Object> template;
 }

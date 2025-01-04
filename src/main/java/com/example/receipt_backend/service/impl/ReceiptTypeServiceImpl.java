@@ -1,5 +1,6 @@
 package com.example.receipt_backend.service.impl;
 
+import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.request.ReceiptTypeRequestDTO;
 import com.example.receipt_backend.dto.request.ReceiptTypeUpdateRequestDTO;
 import com.example.receipt_backend.dto.response.ReceiptTypeResponseDTO;
@@ -10,6 +11,7 @@ import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.ReceiptTypeMapper;
 import com.example.receipt_backend.repository.ReceiptTypeRepository;
 import com.example.receipt_backend.service.ReceiptTypeService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,12 +22,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +35,7 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
     private final ReceiptTypeRepository receiptTypeRepository;
     private final ReceiptTypeMapper receiptTypeMapper;
+    private final ObjectMapper objectMapper;
 
     @Value("${myapp.template.base-directory}")
     private String baseDirectory;
@@ -43,8 +44,7 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
     @Override
     public ReceiptTypeResponseDTO createReceiptType(ReceiptTypeRequestDTO requestDTO) throws IOException {
         // Validate file
-        MultipartFile templateFile = requestDTO.getTemplate();
-        Path targetLocation = saveTemplate(templateFile);
+        Path targetLocation = saveTemplateAsFile(requestDTO.getName(), requestDTO.getTemplate());
 
         try {
             // Create and save ReceiptType entity
@@ -63,18 +63,15 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
         }
     }
 
-    private Path saveTemplate(MultipartFile templateFile) throws IOException {
-        if (templateFile == null || templateFile.isEmpty()) {
-            throw new CustomAppException("Template file is required.");
-        }
-        if (!templateFile.getOriginalFilename().endsWith(".json")) {
-            throw new CustomAppException("Only .json files are allowed.");
+    private Path saveTemplateAsFile(String name, Map<String, Object> template) throws IOException {
+        if (template == null || template.isEmpty()) {
+            throw new CustomAppException("Template data is required.");
         }
 
         // Define the target location
-        String originalFilename = StringUtils.cleanPath(templateFile.getOriginalFilename());
-        Path tenantDirectory = Paths.get(baseDirectory, "Tenant_A"); // Adjust for multi-tenant
-        Path targetLocation = tenantDirectory.resolve(originalFilename);
+        String tenant = CurrentTenantIdentifierResolverImpl.getTenant();
+        Path tenantDirectory = Paths.get(baseDirectory, tenant);
+        Path targetLocation = tenantDirectory.resolve(name + ".json");
 
         // Create directories if they don't exist
         if (!Files.exists(tenantDirectory)) {
@@ -82,7 +79,7 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
         }
 
         // Save the file
-        Files.copy(templateFile.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+        Files.writeString(targetLocation, objectMapper.writeValueAsString(template), StandardOpenOption.CREATE);
         return targetLocation;
     }
 
@@ -91,18 +88,31 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
         ReceiptType existing = receiptTypeRepository.findByName(currentReceiptTypeName)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
 
-        MultipartFile newJsonFile = updateDto.getTemplate();
-        saveTemplate(newJsonFile);
+        try {
+            // Update the name if provided
+            if (updateDto.getName() != null && !updateDto.getName().isBlank()) {
+                existing.setName(updateDto.getName());
+            }
 
-        receiptTypeMapper.updateEntity(updateDto, existing);
+            // Update the template if provided
+            if (updateDto.getTemplate() != null && !updateDto.getTemplate().isEmpty()) {
+                Path targetLocation = saveTemplateAsFile(existing.getName(), updateDto.getTemplate());
+                existing.setTemplatePath(targetLocation.toString());
+            }
 
-        return receiptTypeMapper.toResponseDTO(existing);
+            receiptTypeRepository.save(existing);
+
+            return receiptTypeMapper.toResponseDTO(existing);
+        } catch (Exception e) {
+            log.error("Error updating receipt type: {}", e.getMessage());
+            throw new RuntimeException("Failed to update receipt type: " + e.getMessage(), e);
+        }
     }
 
     @Transactional(readOnly = true)
     @Override
-    public ReceiptTypeResponseDTO getReceiptTypeByName(String receiptTypeName) {
-        ReceiptType receiptType = receiptTypeRepository.findByName(receiptTypeName)
+    public ReceiptTypeResponseDTO getReceiptTypeById(String receiptTypeId) {
+        ReceiptType receiptType = receiptTypeRepository.findById(UUID.fromString(receiptTypeId))
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
 
         return receiptTypeMapper.toResponseDTO(receiptType);
@@ -124,9 +134,9 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
     @Transactional
     @Override
-    public void deleteReceiptType(String receiptTypeName) throws IOException {
+    public void deleteReceiptType(String receiptTypeId) throws IOException {
 
-        ReceiptType receiptType = receiptTypeRepository.findByName(receiptTypeName)
+        ReceiptType receiptType = receiptTypeRepository.findById(UUID.fromString(receiptTypeId))
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
 
         // Delete the template file from path

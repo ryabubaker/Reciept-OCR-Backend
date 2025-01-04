@@ -40,7 +40,7 @@ public class ReceiptTypeController {
     @Operation(summary = "Get receipt type by name", description = "Retrieve a specific receipt type by its Name")
     public ResponseEntity<ReceiptTypeResponseDTO> getReceiptTypeByName(
             @PathVariable String name) {
-        ReceiptTypeResponseDTO responseDTO = receiptTypeService.getReceiptTypeByName(name);
+        ReceiptTypeResponseDTO responseDTO = receiptTypeService.getReceiptTypeById(name);
         return ResponseEntity.ok(responseDTO);
     }
 

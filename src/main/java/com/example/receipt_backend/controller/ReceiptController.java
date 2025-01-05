@@ -8,6 +8,7 @@ import com.example.receipt_backend.service.ReceiptService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,9 +58,9 @@ public class ReceiptController {
 
 
     @DeleteMapping("/{receiptId}")
-    public ResponseEntity<GenericResponseDTO<String>> deleteReceipt(@PathVariable UUID receiptId) {
-            receiptService.deleteReceipt(receiptId);
-        return ResponseEntity.ok(new GenericResponseDTO<>("Receipt deleted successfully", "200"));
+    public ResponseEntity<GenericResponseDTO<Boolean>> deleteReceipt(@PathVariable UUID receiptId) {
+        GenericResponseDTO<Boolean> dto = receiptService.deleteReceipt(receiptId);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
 }

@@ -1,36 +1,25 @@
 package com.example.receipt_backend.service.impl;
 
-import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.LoginRequestDTO;
 import com.example.receipt_backend.dto.request.RegisterUserRequestDTO;
 import com.example.receipt_backend.dto.response.AuthResponseDTO;
-import com.example.receipt_backend.entity.RoleEntity;
-import com.example.receipt_backend.entity.Tenant;
+import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.BadRequestException;
 import com.example.receipt_backend.mapper.UserMapper;
-import com.example.receipt_backend.repository.RoleRepository;
-import com.example.receipt_backend.repository.TenantRepository;
-import com.example.receipt_backend.repository.UserRepository;
 import com.example.receipt_backend.security.CustomUserDetails;
 import com.example.receipt_backend.security.JwtUtils;
 import com.example.receipt_backend.service.AuthenticationService;
 import com.example.receipt_backend.service.UserService;
-import com.example.receipt_backend.utils.RoleType;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
 
 @Service
 @Slf4j
@@ -51,10 +40,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserDTO registerUser(RegisterUserRequestDTO request) {
+    public GenericResponseDTO<Boolean> registerUser(RegisterUserRequestDTO request) {
         UserDTO userDTO = userMapper.toUserDTO(request);
-        User user = userService.createUser(userDTO, request.getTenantId(), request.getRoleType());
-        return userMapper.toDto(user);
+        userService.createUser(userDTO, request.getTenantId(), request.getRoleType());
+        return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
     @Override
     @Transactional

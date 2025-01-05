@@ -4,7 +4,6 @@ import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierRes
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.*;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
-import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.Tenant;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.AppExceptionConstants;
@@ -113,7 +112,7 @@ public class UserServiceImpl implements UserService {
 
         userMapper.updateEntity(reqUserDTO, user);
         userRepository.save(user);
-        return userMapper.toDto(user);
+        return userMapper.toDto(user) ;
     }
 
     @Override
@@ -131,8 +130,7 @@ public class UserServiceImpl implements UserService {
         String firstName = fullName.contains(" ") ? fullName.split(" ", 2)[0] : fullName;
         userRepository.save(user);
         emailService.sendVerificationEmail(user.getEmail(), firstName, appendQueryParamsToVerificationLink);
-        GenericResponseDTO<Boolean> genericResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
-        return genericResponseDTO;
+        return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 
     @Override
@@ -149,8 +147,7 @@ public class UserServiceImpl implements UserService {
         String firstName = fullName.contains(" ") ? fullName.split(" ", 2)[0] : fullName;
         userRepository.save(user);
         emailService.sendPasswordResetEmail(user.getEmail(), firstName, appendQueryParamsToPasswordResetLink);
-        GenericResponseDTO<Boolean> genericResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
-        return genericResponseDTO;
+        return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 
     @Override
@@ -163,8 +160,7 @@ public class UserServiceImpl implements UserService {
         user.setVerificationCodeExpiresAt(null);
         user.setVerificationCode(null);
         userRepository.save(user);
-        GenericResponseDTO<Boolean> emailVerifiedResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
-        return emailVerifiedResponseDTO;
+        return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 
     @Override
@@ -178,8 +174,7 @@ public class UserServiceImpl implements UserService {
         user.setEmailVerified(true);
         user.setPassword(passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword()));
         userRepository.save(user);
-        GenericResponseDTO<Boolean> emailVerifiedResponseDTO = GenericResponseDTO.<Boolean>builder().response(true).build();
-        return emailVerifiedResponseDTO;
+        return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 
     @Override
@@ -202,14 +197,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUserByAdmin(RegisterUserByAdminDto request) {
-        String tenantName = CurrentTenantIdentifierResolverImpl.getTenant();
-        String tenantId = tenantRepository.findByTenantName(tenantName).getTenantId().toString();
+    public GenericResponseDTO<Boolean> createUserByAdmin(RegisterUserByAdminDto request) {
+            String tenantName = CurrentTenantIdentifierResolverImpl.getTenant();
+            String tenantId = tenantRepository.findByTenantName(tenantName).getTenantId().toString();
 
-        RoleType roleType = RoleType.valueOf(request.getRoleType());
+            RoleType roleType = RoleType.valueOf(request.getRoleType());
 
-
-        String generatedPassword = AppUtils.generateRandomAlphaNumericString(10);
+            String generatedPassword = AppUtils.generateRandomAlphaNumericString(10);
 
             // Build UserDTO with the correct tenantId
             UserDTO adminUserDto = UserDTO.builder()
@@ -229,6 +223,8 @@ public class UserServiceImpl implements UserService {
 
             // Send a welcome email with the generated password
             emailService.sendWelcomeEmailWithPassword(createdUser.getEmail(), createdUser.getEmail(), generatedPassword);
+            return GenericResponseDTO.<Boolean>builder().response(true).build();
+
     }
 
 

@@ -15,10 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.*;
-
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @RestController
 @RequestMapping("/receipt-types")
@@ -49,8 +46,8 @@ public class ReceiptTypeController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
     @Operation(summary = "Get all receipt types", description = "Retrieve a list of all receipt types")
-    public ResponseEntity<List<Map<String, ? extends Serializable>>> getAllReceiptTypes() {
-        List<Map<String, ? extends Serializable>> receiptTypes = receiptTypeService.getAllReceiptTypes();
+    public ResponseEntity<List<ReceiptTypeResponseDTO>> getAllReceiptTypes() {
+        List<ReceiptTypeResponseDTO> receiptTypes = receiptTypeService.getAllReceiptTypes();
         return ResponseEntity.ok(receiptTypes);
     }
 

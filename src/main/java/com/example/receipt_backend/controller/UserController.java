@@ -37,15 +37,14 @@ public class UserController {
     @PostMapping("admin-create")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Create a new user by tenant admin", description = "Create a new user with the specified details")
-    public ResponseEntity<GenericResponseDTO<String>> createUserByAdmin(@RequestBody RegisterUserByAdminDto userDTO) {
-        userService.createUserByAdmin(userDTO);
-        GenericResponseDTO<String> response = new GenericResponseDTO<>("User created successfully", "200");
+
+    public ResponseEntity<GenericResponseDTO<Boolean>> createUserByAdmin(@RequestBody RegisterUserByAdminDto userDTO) {
+        GenericResponseDTO<Boolean> response = userService.createUserByAdmin(userDTO);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping
-    @Operation(summary = "Get all users", description = "Retrieve a list of all users with pagination")
-    public ResponseEntity<?> getAllUser(Pageable pageable) {
+    public ResponseEntity<List<UserDTO>> getAllUser(Pageable pageable) {
         log.info("User API: get all user");
         List<UserDTO> userDTOList = userService.getAllUsers(pageable);
         return new ResponseEntity<>(userDTOList, HttpStatus.OK);
@@ -53,7 +52,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Retrieve a user's details by their ID")
-    public ResponseEntity<?> getUserById(@PathVariable UUID id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable UUID id) {
         log.info("User API: get user by id: ", id);
         UserDTO userDTO = userService.getUserById(id);
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
@@ -61,7 +60,7 @@ public class UserController {
 
     @PostMapping
     @Operation(summary = "Create a new user", description = "Create a new user with the specified details")
-    public ResponseEntity<?> createUser(@RequestBody UserDTO userDTO, @RequestParam String tenantId, @RequestParam RoleType roleType) {
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO, @RequestParam String tenantId, @RequestParam RoleType roleType) {
         log.info("User API: create user");
         User createdUser = userService.createUser(userDTO,tenantId, roleType);
         UserDTO createdUserDto = userMapper.toDto(createdUser);
@@ -70,15 +69,22 @@ public class UserController {
 
     @PutMapping
     @Operation(summary = "Update user", description = "Update an existing user's details")
-    public ResponseEntity<?> updateUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<GenericResponseDTO<Boolean>> updateUser(@RequestBody UserDTO userDTO) {
         log.info("User API: updateEntity user");
-        UserDTO returnedUserDTO = userService.updateUser(userDTO);
-        return new ResponseEntity<>(returnedUserDTO, HttpStatus.OK);
+        try {
+            userService.updateUser(userDTO);
+            GenericResponseDTO<Boolean> build = GenericResponseDTO.<Boolean>builder().response(true).build();
+            return new ResponseEntity<>(build, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Failed to update user: {}", e.getMessage(), e);
+            GenericResponseDTO<Boolean> build = GenericResponseDTO.<Boolean>builder().response(false).build();
+            return new ResponseEntity<>(build, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping("/update-password")
     @Operation(summary = "Update user password", description = "Update the password for an existing user")
-    public ResponseEntity<?> updatePassword(@RequestBody UpdatePasswordRequestDTO updatePasswordRequest) {
+    public ResponseEntity<GenericResponseDTO<Boolean>> updatePassword(@RequestBody UpdatePasswordRequestDTO updatePasswordRequest) {
         log.info("User API: processing password updateEntity for userId: ");
         GenericResponseDTO<Boolean> genericResponse = userService.updatePassword(updatePasswordRequest);
         return new ResponseEntity<>(genericResponse, HttpStatus.OK);
@@ -86,7 +92,7 @@ public class UserController {
 
     @GetMapping("/me")
     @Operation(summary = "Get authenticated user", description = "Retrieve details of the currently authenticated user")
-    public ResponseEntity<?> retrieveAuthenticatedUser() {
+    public ResponseEntity<UserDTO> retrieveAuthenticatedUser() {
         Optional<UUID> currentUserId = AppSecurityUtils.getCurrentUserId();
         log.info("User API: retrieve authenticated user details for userId: ", currentUserId.get());
         UserDTO genericResponse = userService.getUserById(currentUserId.get());
@@ -95,7 +101,7 @@ public class UserController {
 
     @GetMapping("/email-exists")
     @Operation(summary = "Check if email exists", description = "Check if a user with the specified email already exists")
-    public ResponseEntity<?> exists(@RequestParam("email") String email) {
+    public ResponseEntity<GenericResponseDTO<Boolean>> exists(@RequestParam("email") String email) {
         GenericResponseDTO<Boolean> genericResponseDTO = userService.userEmailExists(email);
         return new ResponseEntity<>(genericResponseDTO, HttpStatus.OK);
     }

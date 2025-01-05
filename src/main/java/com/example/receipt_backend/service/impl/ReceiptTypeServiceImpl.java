@@ -1,20 +1,16 @@
 package com.example.receipt_backend.service.impl;
 
-import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.request.ReceiptTypeRequestDTO;
 import com.example.receipt_backend.dto.request.ReceiptTypeUpdateRequestDTO;
 import com.example.receipt_backend.dto.response.ReceiptTypeResponseDTO;
 import com.example.receipt_backend.entity.ReceiptType;
 import com.example.receipt_backend.exception.AppExceptionConstants;
-import com.example.receipt_backend.exception.CustomAppException;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.ReceiptTypeMapper;
 import com.example.receipt_backend.repository.ReceiptTypeRepository;
 import com.example.receipt_backend.service.ReceiptTypeService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +22,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.example.receipt_backend.entity.ReceiptType.saveTemplateAsFile;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -33,10 +31,7 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
     private final ReceiptTypeRepository receiptTypeRepository;
     private final ReceiptTypeMapper receiptTypeMapper;
-    private final ObjectMapper objectMapper;
 
-    @Value("${myapp.template.base-directory}")
-    private String baseDirectory;
 
     @Transactional
     @Override
@@ -45,10 +40,14 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
         Path targetLocation = saveTemplateAsFile(requestDTO.getName(), requestDTO.getTemplate());
 
         try {
+            // Use the ReceiptType method to extract column2idxMap
+            Map<String, Integer> column2idxMap = ReceiptType.extractColumn2IdxMap(requestDTO.getTemplate());
+
             // Create and save ReceiptType entity
             ReceiptType receiptType = ReceiptType.builder()
                     .name(requestDTO.getName())
                     .templatePath(targetLocation.toString())
+                    .column2idxMap(column2idxMap)
                     .build();
             receiptTypeRepository.save(receiptType);
 
@@ -59,26 +58,6 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
             Files.deleteIfExists(targetLocation);
             throw e;
         }
-    }
-
-    private Path saveTemplateAsFile(String name, Map<String, Object> template) throws IOException {
-        if (template == null || template.isEmpty()) {
-            throw new CustomAppException("Template data is required.");
-        }
-
-        // Define the target location
-        String tenant = CurrentTenantIdentifierResolverImpl.getTenant();
-        Path tenantDirectory = Paths.get(baseDirectory, tenant);
-        Path targetLocation = tenantDirectory.resolve(name + ".json");
-
-        // Create directories if they don't exist
-        if (!Files.exists(tenantDirectory)) {
-            Files.createDirectories(tenantDirectory);
-        }
-
-        // Save the file
-        Files.writeString(targetLocation, objectMapper.writeValueAsString(template), StandardOpenOption.CREATE);
-        return targetLocation;
     }
 
     @Override
@@ -96,6 +75,10 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
             if (updateDto.getTemplate() != null && !updateDto.getTemplate().isEmpty()) {
                 Path targetLocation = saveTemplateAsFile(existing.getName(), updateDto.getTemplate());
                 existing.setTemplatePath(targetLocation.toString());
+
+                // Update the column2idxMap
+                Map<String, Integer> column2idxMap = ReceiptType.extractColumn2IdxMap(updateDto.getTemplate());
+                existing.setColumn2idxMap(column2idxMap);
             }
 
             receiptTypeRepository.save(existing);
@@ -118,13 +101,10 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<Map<String, ? extends Serializable>> getAllReceiptTypes() {
+    public List<ReceiptTypeResponseDTO> getAllReceiptTypes() {
         List<ReceiptType> receiptTypes = receiptTypeRepository.findAll();
-        List<Map<String, ? extends Serializable>> collect = receiptTypes.stream()
-                .map(receiptType ->
-                        Map.of(
-                                "receiptTypeId", receiptType.getReceiptTypeId().toString(),
-                                "name", receiptType.getName()))
+        List<ReceiptTypeResponseDTO> collect = receiptTypes.stream()
+                .map(receiptTypeMapper::toResponseDTO)
                 .collect(Collectors.toList());
 
         return collect;

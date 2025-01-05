@@ -18,11 +18,14 @@ public interface ReceiptTypeMapper {
     @Mapping(target = "receiptTypeId", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "templatePath", ignore = true)
+    @Mapping(target = "column2idxMap", ignore = true)
     ReceiptType toEntity(ReceiptTypeRequestDTO receiptTypeRequestDTO);
 
     @Mapping(target = "receiptTypeId", source = "receiptTypeId")
     @Mapping(target = "template", source = "templatePath", qualifiedByName = "readTemplateFile")
+    @Mapping(target = "column2idxMap", source = "column2idxMap")
     ReceiptTypeResponseDTO toResponseDTO(ReceiptType receiptType);
+
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "name", source = "name")

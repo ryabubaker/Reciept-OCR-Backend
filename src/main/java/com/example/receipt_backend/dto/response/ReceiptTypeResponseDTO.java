@@ -14,5 +14,7 @@ public class ReceiptTypeResponseDTO {
     private String name;
 
     private Map<String, Object> template;
+
+    private Map<String, Integer> column2idxMap;
 }
 

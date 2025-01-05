@@ -10,9 +10,17 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 1. receipt_type Table
 CREATE TABLE receipt_type (
-                              receipt_type_id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+                              receipt_type_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                               name VARCHAR(255) NOT NULL,
                               template_path VARCHAR(1024) NOT NULL
+);
+
+CREATE TABLE receipt_type_fields (
+                                     receipt_type_id UUID NOT NULL,
+                                     column_name VARCHAR(255) NOT NULL,
+                                     column_index INTEGER,
+                                     PRIMARY KEY (receipt_type_id, column_name),
+                                     FOREIGN KEY (receipt_type_id) REFERENCES receipt_type(receipt_type_id) ON DELETE CASCADE
 );
 
 -- 2. upload_requests Table
@@ -67,3 +75,5 @@ CREATE INDEX idx_receipt_approved_by_user_id ON receipt(approved_by_user_id);
 
 -- Index for uploaded_by_user_id in upload_requests
 CREATE INDEX idx_upload_requests_uploaded_by_user_id ON upload_requests(uploaded_by_user_id);
+
+CREATE INDEX idx_receipt_type_fields_receipt_type_id ON receipt_type_fields (receipt_type_id);

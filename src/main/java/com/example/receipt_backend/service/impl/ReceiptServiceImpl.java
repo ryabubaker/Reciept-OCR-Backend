@@ -5,6 +5,7 @@ import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierRes
 import com.example.receipt_backend.dto.ReceiptDTO;
 
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
+import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
 import com.example.receipt_backend.entity.Receipt;
 import com.example.receipt_backend.entity.ReceiptType;
@@ -126,7 +127,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     @Transactional
     @Override
-    public void deleteReceipt(UUID receiptId) {
+    public GenericResponseDTO<Boolean> deleteReceipt(UUID receiptId) {
         Receipt receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_NOT_FOUND));
 
@@ -151,6 +152,8 @@ public class ReceiptServiceImpl implements ReceiptService {
         if (request != null && request.getReceipts().isEmpty()) {
             uploadRequestRepository.delete(request);
         }
+
+        return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 
 

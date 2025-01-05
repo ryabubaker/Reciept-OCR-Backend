@@ -41,5 +41,5 @@ public interface UserService {
 
     GenericResponseDTO<Boolean> updatePassword(UpdatePasswordRequestDTO updatePasswordRequest);
 
-    void createUserByAdmin(RegisterUserByAdminDto request);
+    GenericResponseDTO<Boolean> createUserByAdmin(RegisterUserByAdminDto request);
 }

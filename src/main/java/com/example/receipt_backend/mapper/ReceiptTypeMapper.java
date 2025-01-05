@@ -6,15 +6,10 @@ import com.example.receipt_backend.dto.response.ReceiptTypeResponseDTO;
 import com.example.receipt_backend.entity.ReceiptType;
 import org.mapstruct.*;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Map;
-
-import static com.example.receipt_backend.utils.AppUtils.fromJson;
-
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ReceiptTypeMapper {
+
+
     @Mapping(target = "receiptTypeId", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "templatePath", ignore = true)
@@ -22,7 +17,7 @@ public interface ReceiptTypeMapper {
     ReceiptType toEntity(ReceiptTypeRequestDTO receiptTypeRequestDTO);
 
     @Mapping(target = "receiptTypeId", source = "receiptTypeId")
-    @Mapping(target = "template", source = "templatePath", qualifiedByName = "readTemplateFile")
+    @Mapping(target = "template", ignore = true)
     @Mapping(target = "column2idxMap", source = "column2idxMap")
     ReceiptTypeResponseDTO toResponseDTO(ReceiptType receiptType);
 
@@ -32,12 +27,5 @@ public interface ReceiptTypeMapper {
     @Mapping(target = "templatePath", ignore = true)
     void updateEntity(ReceiptTypeUpdateRequestDTO dto, @MappingTarget ReceiptType entity);
 
-    @Named("readTemplateFile")
-    default Map<String, Object> readTemplateFile(String templatePath) throws IOException {
-        String jsonContent = Files.readString(Path.of(templatePath));
-
-        Map<String, Object> json;
-        json = fromJson(jsonContent, Map.class);
-        return json;
-    }
+   
 }

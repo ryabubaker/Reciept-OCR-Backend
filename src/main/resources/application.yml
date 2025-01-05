@@ -61,15 +61,18 @@ spring:
 #            scope: email, public_profile
 
 aws:
-  access: ${AWS_ACCESS_KEY}
-  secret: ${AWS_SECRET_KEY}
+  access: ${AWS_ACCESS_KEY_ID}
+  secret: ${AWS_SECRET_ACCESS_KEY}
   s3:
-    bucket: ${AWS_S3_BUCKET}
+    bucket: receipt-bucket-gp
     region: ${AWS_REGION}
 
 # logging config
 logging:
   level:
+    software:
+      amazon:
+        awssdk: DEBUG
     root: INFO
     org:
       hibernate:
@@ -106,9 +109,6 @@ myapp:
 
   jwtSecret: ${JWT_SECRET_KEY}
   jwtExpirationMs: 86400000
-
-  template:
-    base-directory: src/main/resources/templates/
 
   ocr:
     base-url: http://127.0.0.1:5000

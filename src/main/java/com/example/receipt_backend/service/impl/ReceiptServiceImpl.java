@@ -3,17 +3,20 @@ package com.example.receipt_backend.service.impl;
 
 import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.ReceiptDTO;
-
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
 import com.example.receipt_backend.entity.Receipt;
 import com.example.receipt_backend.entity.ReceiptType;
 import com.example.receipt_backend.entity.UploadRequest;
-import com.example.receipt_backend.exception.*;
+import com.example.receipt_backend.exception.AppExceptionConstants;
+import com.example.receipt_backend.exception.BadRequestException;
+import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.ReceiptMapper;
 import com.example.receipt_backend.mapper.UploadRequestMapper;
-import com.example.receipt_backend.repository.*;
+import com.example.receipt_backend.repository.ReceiptRepository;
+import com.example.receipt_backend.repository.ReceiptTypeRepository;
+import com.example.receipt_backend.repository.UploadRequestRepository;
 import com.example.receipt_backend.security.AppSecurityUtils;
 import com.example.receipt_backend.service.FileStorageService;
 import com.example.receipt_backend.service.OcrService;
@@ -21,7 +24,6 @@ import com.example.receipt_backend.service.ReceiptService;
 import com.example.receipt_backend.utils.ReceiptStatus;
 import com.example.receipt_backend.utils.RequestStatus;
 import com.example.receipt_backend.websocket.WebSocketNotificationService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +34,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -49,6 +54,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final WebSocketNotificationService notificationService;
     private final UploadRequestRepository uploadRequestRepository;
     private final ReceiptTypeRepository receiptTypeRepository;
+
 
     @Transactional
     @Override
@@ -220,6 +226,8 @@ public class ReceiptServiceImpl implements ReceiptService {
             throw new BadRequestException(AppExceptionConstants.FILE_TOO_LARGE);
         }
     }
+
+
 
 }
 

@@ -29,7 +29,7 @@ public class ReceiptTypeController {
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Create a new receipt type", description = "Allows a company admin to create a new receipt type")
     public ResponseEntity<ReceiptTypeResponseDTO> createReceiptType(
-            @Valid @ModelAttribute ReceiptTypeRequestDTO requestDTO) throws IOException {
+            @Valid @RequestBody ReceiptTypeRequestDTO requestDTO) throws IOException {
         ReceiptTypeResponseDTO responseDTO = receiptTypeService.createReceiptType(requestDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
@@ -46,8 +46,16 @@ public class ReceiptTypeController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
     @Operation(summary = "Get all receipt types", description = "Retrieve a list of all receipt types")
-    public ResponseEntity<List<ReceiptTypeResponseDTO>> getAllReceiptTypes() {
-        List<ReceiptTypeResponseDTO> receiptTypes = receiptTypeService.getAllReceiptTypes();
+    public ResponseEntity<List<Map<String, Object>>> getAllReceiptTypes() {
+        List<Map<String, Object>> receiptTypes = receiptTypeService.getAllReceiptTypes();
+        return ResponseEntity.ok(receiptTypes);
+    }
+
+    @GetMapping("/json")
+    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
+    @Operation(summary = "Get all receipt types with Json", description = "Retrieve a list of all receipt types with their Json")
+    public ResponseEntity<List<ReceiptTypeResponseDTO>> getAllReceiptTypesWithJson() {
+        List<ReceiptTypeResponseDTO> receiptTypes = receiptTypeService.getAllReceiptTypesWithJson();
         return ResponseEntity.ok(receiptTypes);
     }
 

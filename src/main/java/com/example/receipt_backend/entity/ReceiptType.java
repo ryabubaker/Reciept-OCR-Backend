@@ -1,18 +1,9 @@
 // src/main/java/com/example/receipt_backend/entity/ReceiptType.java
 package com.example.receipt_backend.entity;
 
-import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
-import com.example.receipt_backend.exception.CustomAppException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.beans.factory.annotation.Value;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,26 +55,7 @@ public class ReceiptType {
         return column2idxMap;
     }
 
-    public static Path saveTemplateAsFile(String name, Map<String, Object> template) throws IOException {
-        if (template == null || template.isEmpty()) {
-            throw new CustomAppException("Template data is required.");
-        }
-        String baseDirectory = System.getenv("{myapp.template.base-directory");
 
-        // Define the target location
-        String tenant = CurrentTenantIdentifierResolverImpl.getTenant();
-        Path tenantDirectory = Paths.get(baseDirectory, tenant);
-        Path targetLocation = tenantDirectory.resolve(name + ".json");
-
-        // Create directories if they don't exist
-        if (!Files.exists(tenantDirectory)) {
-            Files.createDirectories(tenantDirectory);
-        }
-
-        // Save the file
-        Files.writeString(targetLocation, new ObjectMapper().writeValueAsString(template), StandardOpenOption.CREATE);
-        return targetLocation;
-    }
 
 }
 

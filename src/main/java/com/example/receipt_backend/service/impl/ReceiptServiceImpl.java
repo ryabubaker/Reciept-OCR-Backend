@@ -231,10 +231,6 @@ public class ReceiptServiceImpl implements ReceiptService {
         if (contentType == null || !List.of("image/jpeg", "image/png").contains(contentType.toLowerCase())) {
             throw new BadRequestException(AppExceptionConstants.INVALID_FILE_TYPE);
         }
-
-        if (file.getSize() > 5 * 1024 * 1024) {
-            throw new BadRequestException(AppExceptionConstants.FILE_TOO_LARGE);
-        }
     }
 
 

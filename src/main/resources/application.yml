@@ -1,6 +1,9 @@
 server:
   port: ${PORT:8080}
+  tomcat:
+    max-swallow-size: -1
   forward-headers-strategy: framework
+
 
 spring:
   datasource:
@@ -26,6 +29,11 @@ spring:
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
+
+  servlet:
+    multipart:
+      max-file-size: 80MB
+      max-request-size: 160MB
 
   mail:
     properties:

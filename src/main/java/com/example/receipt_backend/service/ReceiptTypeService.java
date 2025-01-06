@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public interface ReceiptTypeService {
 
@@ -19,10 +20,13 @@ public interface ReceiptTypeService {
     ReceiptTypeResponseDTO getReceiptTypeById(String receiptTypeId);
 
     @Transactional(readOnly = true)
-    List<ReceiptTypeResponseDTO> getAllReceiptTypes();
+    List<Map<String, Object>> getAllReceiptTypes();
 
     @Transactional
     ReceiptTypeResponseDTO updateReceiptType(String receiptTypeId, ReceiptTypeUpdateRequestDTO requestDTO) throws IOException;
+
+    @Transactional(readOnly = true)
+    List<ReceiptTypeResponseDTO> getAllReceiptTypesWithJson();
 
     @Transactional
     void deleteReceiptType(String receiptTypeId) throws IOException;

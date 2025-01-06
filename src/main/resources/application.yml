@@ -61,7 +61,7 @@ spring:
 #            scope: email, public_profile
 
 aws:
-  access: ${AWS_ACCESS_KEY_ID}
+  access: ${AWS_ACCESS_KEY}
   secret: ${AWS_SECRET_ACCESS_KEY}
   s3:
     bucket: receipt-bucket-gp

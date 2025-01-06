@@ -71,27 +71,27 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
     public ReceiptTypeResponseDTO updateReceiptType(String receiptTypeId, ReceiptTypeUpdateRequestDTO updateDto) throws IOException {
         ReceiptType existing = receiptTypeRepository.findById(UUID.fromString(receiptTypeId))
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
-        String key = saveTemplateAsFile(existing.getName(), updateDto.getTemplate());
-
-
+    
         try {
             // Update the name if provided
             if (updateDto.getName() != null && !updateDto.getName().isBlank()) {
                 existing.setName(updateDto.getName());
             }
-
+    
             // Update the template if provided
             if (updateDto.getTemplate() != null && !updateDto.getTemplate().isEmpty()) {
+                // Save or replace the template file in S3
+                String key = saveTemplateAsFile(existing.getName(), updateDto.getTemplate());
                 existing.setTemplatePath(key);
-
+    
                 // Update the column2idxMap
                 Map<String, Integer> column2idxMap = ReceiptType.extractColumn2IdxMap(updateDto.getTemplate());
                 existing.setColumn2idxMap(column2idxMap);
             }
-
+    
             receiptTypeRepository.save(existing);
-            Map<String, Object> map = readTemplate(key);
-
+            Map<String, Object> map = readTemplate(existing.getTemplatePath());
+    
             ReceiptTypeResponseDTO responseDTO = receiptTypeMapper.toResponseDTO(existing);
             responseDTO.setTemplate(map);
             return responseDTO;

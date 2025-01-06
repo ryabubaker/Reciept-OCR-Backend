@@ -15,7 +15,7 @@ public interface ReceiptService {
 
 
     @Transactional
-    void uploadReceipts(UploadRequestDTO requestDTO);
+    GenericResponseDTO<Boolean> uploadReceipts(UploadRequestDTO requestDTO);
 
     @Transactional
     UploadResponseDTO getRequestById(UUID requestId);

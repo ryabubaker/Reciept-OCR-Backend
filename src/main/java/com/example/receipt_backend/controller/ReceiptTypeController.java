@@ -72,10 +72,10 @@ public class ReceiptTypeController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Delete a receipt type", description = "Allows a company admin to delete a receipt type")
-    public ResponseEntity<GenericResponseDTO<String>> deleteReceiptType(
+    public ResponseEntity<GenericResponseDTO<Boolean>> deleteReceiptType(
             @PathVariable String id) throws IOException {
-        receiptTypeService.deleteReceiptType(id);
-        return ResponseEntity.ok(new GenericResponseDTO<>("Receipt type deleted successfully", "200"));
+        GenericResponseDTO<Boolean> dto= receiptTypeService.deleteReceiptType(id);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
 }

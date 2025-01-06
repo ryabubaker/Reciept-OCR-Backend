@@ -4,6 +4,7 @@ package com.example.receipt_backend.service;
 
 import com.example.receipt_backend.dto.request.ReceiptTypeRequestDTO;
 import com.example.receipt_backend.dto.request.ReceiptTypeUpdateRequestDTO;
+import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.ReceiptTypeResponseDTO;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,5 +30,5 @@ public interface ReceiptTypeService {
     List<ReceiptTypeResponseDTO> getAllReceiptTypesWithJson();
 
     @Transactional
-    void deleteReceiptType(String receiptTypeId) throws IOException;
+    GenericResponseDTO<Boolean> deleteReceiptType(String receiptTypeId) throws IOException;
 }

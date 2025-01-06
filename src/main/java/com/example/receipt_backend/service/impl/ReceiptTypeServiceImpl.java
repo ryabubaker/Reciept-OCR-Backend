@@ -3,6 +3,7 @@ package com.example.receipt_backend.service.impl;
 import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.request.ReceiptTypeRequestDTO;
 import com.example.receipt_backend.dto.request.ReceiptTypeUpdateRequestDTO;
+import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.ReceiptTypeResponseDTO;
 import com.example.receipt_backend.entity.ReceiptType;
 import com.example.receipt_backend.exception.AppExceptionConstants;
@@ -145,7 +146,7 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
     @Transactional
     @Override
-    public void deleteReceiptType(String receiptTypeId) throws IOException {
+    public GenericResponseDTO<Boolean> deleteReceiptType(String receiptTypeId) throws IOException {
 
         ReceiptType receiptType = receiptTypeRepository.findById(UUID.fromString(receiptTypeId))
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_TYPE_NOT_FOUND));
@@ -157,6 +158,7 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
         // Delete the entity
         receiptTypeRepository.delete(receiptType);
+        return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 
     private String saveTemplateAsFile(String name, Map<String, Object> template) throws IOException {

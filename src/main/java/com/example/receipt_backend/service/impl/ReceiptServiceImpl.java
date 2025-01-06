@@ -58,7 +58,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     @Transactional
     @Override
-    public void uploadReceipts(UploadRequestDTO uploadRequestDto) {
+    public GenericResponseDTO<Boolean> uploadReceipts(UploadRequestDTO uploadRequestDto) {
         // Convert and save the UploadRequest entity
         UploadRequest uploadRequest = uploadRequestMapper.toEntity(uploadRequestDto);
         UploadRequest savedRequest = uploadRequestRepository.save(uploadRequest);
@@ -91,6 +91,8 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         // Initiate OCR processing asynchronously
         receipts.forEach(r -> ocrService.processReceiptAsync(r, savedRequest));
+
+        return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 
     @Transactional

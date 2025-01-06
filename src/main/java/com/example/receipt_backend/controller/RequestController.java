@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,10 +27,10 @@ public class RequestController {
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ROLE_MOBILE_USER')")
     @Operation(summary = "Upload Receipts", description = "Uploads receipts based on the provided request data")
-    public ResponseEntity<GenericResponseDTO<String>> uploadRequest(
+    public ResponseEntity<GenericResponseDTO<Boolean>> uploadRequest(
             @Parameter(description = "Data for uploading receipts") UploadRequestDTO requestDTO) {
-        receiptService.uploadReceipts(requestDTO);
-        return ResponseEntity.ok(new GenericResponseDTO<>("Receipts uploaded successfully", "200"));
+        GenericResponseDTO<Boolean> dto= receiptService.uploadReceipts(requestDTO);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     @GetMapping("/pending")

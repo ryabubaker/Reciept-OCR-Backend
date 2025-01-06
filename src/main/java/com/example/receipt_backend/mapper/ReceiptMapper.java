@@ -19,6 +19,7 @@ public interface ReceiptMapper {
 
     @Mapping(target = "receiptTypeId", source = "receiptType.receiptTypeId")
     @Mapping(target = "approvedBy", source = "approvedBy.id")
+    @Mapping(target = "receiptTypeName", source = "receiptType.name")
     ReceiptDTO toDTO(Receipt receipt);
 
     @Mapping(target = "request", source = "uploadRequest")

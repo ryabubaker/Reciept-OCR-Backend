@@ -2,6 +2,7 @@ package com.example.receipt_backend.ocr;
 
 import com.example.receipt_backend.dto.response.OcrResponse;
 import com.example.receipt_backend.exception.BadRequestException;
+import com.example.receipt_backend.service.FileStorageService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,20 +28,15 @@ public class OcrClient {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final FileStorageService s3Service;
 
-    /**
-     * Processes a receipt by sending a POST request to the OCR service.
-     *
-     * @param imagePath    the path to the image
-     * @param templatePath the path to the JSON template
-     * @return the OCR response
-     */
-    public OcrResponse processReceipt(String imagePath, String templatePath) {
+
+    public OcrResponse processReceipt(String imagePath, String templateKey) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("test_image_path", imagePath);
 
-        // Load additional data from the JSON template file
-        Map<String, Object> additionalData = parseJsonFile(templatePath);
+        // Load additional data from the JSON template file in S3
+        Map<String, Object> additionalData = parseJsonFileFromS3(templateKey);
         payload.putAll(additionalData);
 
         HttpHeaders headers = new HttpHeaders();
@@ -48,7 +45,7 @@ public class OcrClient {
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
 
         try {
-            ResponseEntity<OcrResponse> responseEntity = restTemplate.postForEntity( ocrServiceBaseUrl +
+            ResponseEntity<OcrResponse> responseEntity = restTemplate.postForEntity(ocrServiceBaseUrl +
                     "/process", requestEntity, OcrResponse.class);
 
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -68,17 +65,17 @@ public class OcrClient {
     }
 
     /**
-     * Parses a JSON file into a Map.
+     * Parses a JSON file from S3 into a Map.
      *
-     * @param jsonFilePath the path to the JSON file
+     * @param templateKey the S3 key of the JSON template file
      * @return a map representation of the JSON data
      */
-    private Map<String, Object> parseJsonFile(String jsonFilePath) {
-        try {
-            return objectMapper.readValue(new File(jsonFilePath), new TypeReference<>() {});
+    private Map<String, Object> parseJsonFileFromS3(String templateKey) {
+        try (InputStream inputStream = s3Service.downloadFile(templateKey)) {
+            return objectMapper.readValue(inputStream, new TypeReference<>() {});
         } catch (IOException e) {
-            log.error("Failed to read JSON file at path: {}", jsonFilePath, e);
-            throw new BadRequestException("Failed to read JSON template file.", e);
+            log.error("Failed to read JSON file from S3 with key: {}", templateKey, e);
+            throw new BadRequestException("Failed to read JSON template file from S3.", e);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.receipt_backend.controller;
 
+import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.TenantRequestDTO;
 import com.example.receipt_backend.dto.request.UpdateTenantRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
@@ -81,5 +82,13 @@ public class TenantController {
     public ResponseEntity<List<TenantResponseDTO>> getAllTenants() {
         List<TenantResponseDTO> tenants = tenantService.getAllTenants();
         return new ResponseEntity<>(tenants, HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_SYSTEM_ADMIN', 'ROLE_COMPANY_ADMIN')")
+    @GetMapping("/{id}/users")
+    @Operation(summary = "Get all users for a tenant", description = "Allows a system or company admin to retrieve all users for a specific tenant")
+    public ResponseEntity<List<UserDTO>> getUsersByTenantId(@PathVariable UUID id) {
+        List<UserDTO> users = tenantService.getUsersByTenantId(id);
+        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 }

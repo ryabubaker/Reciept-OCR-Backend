@@ -172,6 +172,14 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .map(uploadRequestMapper::toResponseDTO);
     }
 
+    @Override
+    public List<ReceiptDTO> listReceipts() {
+        return receiptRepository.findAllByStatus(ReceiptStatus.APPROVED)
+                .stream()
+                .map(receiptMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
 
 
 //    @Override

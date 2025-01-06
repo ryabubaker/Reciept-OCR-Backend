@@ -1,5 +1,6 @@
 package com.example.receipt_backend.service;
 
+import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.TenantRequestDTO;
 import com.example.receipt_backend.dto.request.UpdateTenantRequestDTO;
 import com.example.receipt_backend.dto.response.TenantResponseDTO;
@@ -28,4 +29,7 @@ public interface TenantService {
     List<TenantResponseDTO> getAllTenants();
 
     void activateTenant(UUID id);
+
+    @Transactional(readOnly = true)
+    List<UserDTO> getUsersByTenantId(UUID tenantId);
 }

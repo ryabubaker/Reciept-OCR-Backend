@@ -12,6 +12,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -46,5 +47,8 @@ public class Tenant{
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private TenantStatus status = TenantStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<User> users;
 
 }

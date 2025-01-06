@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ public interface ReceiptService {
 
     @Transactional
     GenericResponseDTO<Boolean> uploadReceipts(UploadRequestDTO requestDTO);
+
+    List<ReceiptDTO> listReceipts();
 
     @Transactional
     UploadResponseDTO getRequestById(UUID requestId);

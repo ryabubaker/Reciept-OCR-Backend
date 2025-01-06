@@ -1,17 +1,14 @@
 package com.example.receipt_backend.controller;
 
 import com.example.receipt_backend.dto.ReceiptDTO;
-import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
-import com.example.receipt_backend.dto.response.UploadResponseDTO;
 import com.example.receipt_backend.service.ReceiptService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,15 +19,11 @@ public class ReceiptController {
 
     private final ReceiptService receiptService;
 
-
-
-//    @GetMapping("/list")
-//    public ResponseEntity<Page<ReceiptDTO>> listReceipts(@RequestBody QueryDTO requestDTO) {
-//        Page<ReceiptDTO> receipts = receiptService.listReceipts(requestDTO);
-//        return ResponseEntity.ok(receipts);
-//    }
-
-
+    @GetMapping("/list")
+    public ResponseEntity<List<ReceiptDTO>> listReceipts() {
+        List<ReceiptDTO> receipts = receiptService.listReceipts();
+        return ResponseEntity.ok(receipts);
+    }
 
     @PatchMapping("/{receiptId}/approve")
     public ResponseEntity<ReceiptDTO> approveReceipt(

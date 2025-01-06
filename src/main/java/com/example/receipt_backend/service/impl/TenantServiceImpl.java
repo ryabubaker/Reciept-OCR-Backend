@@ -12,6 +12,7 @@ import com.example.receipt_backend.exception.CustomAppException;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mail.EmailService;
 import com.example.receipt_backend.mapper.TenantMapper;
+import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.repository.TenantRepository;
 import com.example.receipt_backend.repository.UserRepository;
 import com.example.receipt_backend.security.SecurityEnums;
@@ -42,6 +43,7 @@ public class TenantServiceImpl implements TenantService {
     private final UserService userService;
     private final RoleService roleService;
     private final EmailService emailService;
+    private final UserMapper userMapper;
 
     @Override
     @Transactional
@@ -195,4 +197,15 @@ public class TenantServiceImpl implements TenantService {
                 .map(tenantMapper::toDto)
                 .collect(Collectors.toList());
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserDTO> getUsersByTenantId(UUID tenantId) {
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
+        return tenant.getUsers().stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 }

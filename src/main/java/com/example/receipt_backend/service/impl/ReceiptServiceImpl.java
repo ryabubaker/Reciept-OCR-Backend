@@ -92,7 +92,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         // Initiate OCR processing asynchronously
         receipts.forEach(r -> ocrService.processReceiptAsync(r, savedRequest));
 
-        return GenericResponseDTO.<Boolean>builder().response(true).build();
+        return GenericResponseDTO.<Boolean>builder().response(true).messageCode("Uploaded successfully").build();
     }
 
     @Transactional

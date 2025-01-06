@@ -7,6 +7,7 @@ import com.example.receipt_backend.service.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ public class RequestController {
     @PreAuthorize("hasRole('ROLE_MOBILE_USER')")
     @Operation(summary = "Upload Receipts", description = "Uploads receipts based on the provided request data")
     public ResponseEntity<GenericResponseDTO<Boolean>> uploadRequest(
-            @Parameter(description = "Data for uploading receipts") UploadRequestDTO requestDTO) {
+            @Valid @ModelAttribute  @Parameter(description = "Data for uploading receipts") UploadRequestDTO requestDTO) {
         GenericResponseDTO<Boolean> dto= receiptService.uploadReceipts(requestDTO);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }

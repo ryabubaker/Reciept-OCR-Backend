@@ -127,8 +127,8 @@ myapp:
     defaultPageSize: 50
 
   jwtSecret: ${JWT_SECRET_KEY}
-  jwtExpirationMs: 24 * 60 * 60 * 1000
-  jwtRefreshExpirationMs: 30 * 24 * 60 * 60 * 1000
+  jwtExpirationMs: 86400000
+  jwtRefreshExpirationMs: 864000000
 
   ocr:
     base-url: http://127.0.0.1:5000

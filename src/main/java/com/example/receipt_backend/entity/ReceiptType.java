@@ -34,16 +34,16 @@ public class ReceiptType {
     @CollectionTable(name = "receipt_type_fields", joinColumns = @JoinColumn(name = "receipt_type_id"))
     @MapKeyColumn(name = "column_name")
     @Column(name = "column_index")
-    private Map<String, Integer> column2idxMap;
+    private HashMap<String, Integer> column2idxMap;
 
     // Method to extract column2idxMap from a template JSON
 
-    public static Map<String, Integer> extractColumn2IdxMap(Map<String, Object> template) {
+    public static HashMap<String, Integer> extractColumn2IdxMap(Map<String, Object> template) {
         if (template == null || !template.containsKey("shapes")) {
             throw new IllegalArgumentException("Invalid template: missing 'shapes' key");
         }
 
-        Map<String, Integer> column2idxMap = new HashMap<>();
+        HashMap<String, Integer> column2idxMap = new HashMap<>();
         List<Map<String, Object>> shapes = (List<Map<String, Object>>) template.get("shapes");
 
         for (Map<String, Object> shape : shapes) {
@@ -54,7 +54,6 @@ public class ReceiptType {
 
         return column2idxMap;
     }
-
 
 
 }

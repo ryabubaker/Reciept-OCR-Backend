@@ -5,6 +5,7 @@ import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.utils.RoleType;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +25,7 @@ public interface UserService {
 
     User createUser(UserDTO userDto, String tenantId, RoleType roleType);
 
-    UserDTO updateUser(UserDTO userDTO);
+    UserDTO updateUser(UUID id, UserDTO userDTO);
 
     // Email Verification
     GenericResponseDTO<Boolean> sendVerificationEmail(String email);
@@ -41,5 +42,7 @@ public interface UserService {
 
     GenericResponseDTO<Boolean> updatePassword(UpdatePasswordRequestDTO updatePasswordRequest);
 
-    GenericResponseDTO<Boolean> createUserByAdmin(RegisterUserByAdminDto request);
+    ResponseEntity<GenericResponseDTO<Boolean>> createUserByAdmin(RegisterUserByAdminDto request);
+
+    void deleteUsers(List<UUID> userIds);
 }

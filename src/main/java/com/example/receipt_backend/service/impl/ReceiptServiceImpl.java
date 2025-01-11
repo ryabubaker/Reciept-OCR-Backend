@@ -3,12 +3,14 @@ package com.example.receipt_backend.service.impl;
 
 import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.ReceiptDTO;
+import com.example.receipt_backend.dto.UpdateReceiptDto;
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
 import com.example.receipt_backend.entity.Receipt;
 import com.example.receipt_backend.entity.ReceiptType;
 import com.example.receipt_backend.entity.UploadRequest;
+import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.AppExceptionConstants;
 import com.example.receipt_backend.exception.BadRequestException;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
@@ -17,6 +19,7 @@ import com.example.receipt_backend.mapper.UploadRequestMapper;
 import com.example.receipt_backend.repository.ReceiptRepository;
 import com.example.receipt_backend.repository.ReceiptTypeRepository;
 import com.example.receipt_backend.repository.UploadRequestRepository;
+import com.example.receipt_backend.repository.UserRepository;
 import com.example.receipt_backend.security.AppSecurityUtils;
 import com.example.receipt_backend.service.FileStorageService;
 import com.example.receipt_backend.service.OcrService;
@@ -34,10 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -54,6 +54,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final WebSocketNotificationService notificationService;
     private final UploadRequestRepository uploadRequestRepository;
     private final ReceiptTypeRepository receiptTypeRepository;
+    private final UserRepository userRepository;
 
 
     @Transactional
@@ -109,7 +110,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
 
         // 3) Update the values in receipt.ocrData
-        List<Map<Integer, String>> currentOcrData = receipt.getOcrData();
+        HashMap<Integer, String> currentOcrData = receipt.getOcrData();
 
         receipt.setOcrData(currentOcrData);
 
@@ -164,6 +165,58 @@ public class ReceiptServiceImpl implements ReceiptService {
         return GenericResponseDTO.<Boolean>builder().response(true).build();
     }
 
+    @Transactional
+    @Override
+    public void deleteReceipts(List<UUID> receiptIds) {
+        for (UUID receiptId : receiptIds) {
+            try {
+                deleteReceipt(receiptId);
+            } catch (ResourceNotFoundException e) {
+                log.error("Receipt ID {} not found: {}", receiptId, e.getMessage());
+                throw e;
+            } catch (Exception e) {
+                log.error("Failed to delete receipt ID {}: {}", receiptId, e.getMessage());
+                throw new BadRequestException("Failed to delete receipt with ID: " + receiptId, e);
+            }
+        }
+    }
+    @Transactional
+    @Override
+    public void updateReceiptsForApproval(List<UpdateReceiptDto> dtos) {
+
+        for ( UpdateReceiptDto updateReceiptDto : dtos  ) {
+            // Find the receipt
+            Receipt receipt = receiptRepository.findById(UUID.fromString(updateReceiptDto.getReceiptId()))
+                    .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.RECEIPT_NOT_FOUND));
+
+            // Update the receipt's status and OCR data
+            User user = userRepository.getReferenceById(UUID.fromString(updateReceiptDto.getApprovedBy()));
+            receipt.setStatus(updateReceiptDto.getStatus());
+            receipt.setOcrData(updateReceiptDto.getOcrData());
+            receipt.setApprovedBy(user);
+            receipt.setApprovedAt(LocalDateTime.parse(updateReceiptDto.getApprovedAt()));
+
+            // Save the updated receipt
+            receiptRepository.save(receipt);
+        }
+    }
+
+    @Override
+    public List<UploadResponseDTO> getRequestsAfterDate(LocalDateTime dateTime) {
+        return uploadRequestRepository.findAllByUploadedAtAfter(dateTime)
+                .stream()
+                .map(uploadRequestMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateRequestStatus(String requestId, RequestStatus status) {
+        UploadRequest request = uploadRequestRepository.findById(UUID.fromString(requestId))
+                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.REQUEST_NOT_FOUND));
+
+        request.setStatus(status);
+        uploadRequestRepository.save(request);
+    }
 
     @Override
     @Transactional(readOnly = true)

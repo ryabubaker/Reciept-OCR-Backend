@@ -3,7 +3,6 @@ package com.example.receipt_backend.repository;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.security.SecurityEnums;
 import com.example.receipt_backend.utils.RoleType;
-import io.micrometer.common.lang.NonNull;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -17,7 +16,7 @@ import java.util.UUID;
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
 
-    @EntityGraph(attributePaths = "roles", type = EntityGraph.EntityGraphType.LOAD)
+    @EntityGraph(attributePaths = "role", type = EntityGraph.EntityGraphType.LOAD)
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
@@ -38,12 +37,11 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     boolean existsByEmailAndTenant_TenantId(String email, UUID tenantId);
 
-    @NonNull
-    Optional<User> findById(@NonNull UUID id);
+
 
     Optional<User> findByUsername(String username);
 
-    boolean existsByRoles_Name(RoleType roleType);
+    boolean existsByRole_Name(RoleType roleType);
 
     boolean existsByEmailAndTenant_TenantName(String adminEmail, String tenantName);
 }

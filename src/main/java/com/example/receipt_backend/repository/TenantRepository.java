@@ -13,9 +13,5 @@ import java.util.UUID;
 public interface TenantRepository extends JpaRepository<Tenant, UUID> {
      Optional<Tenant> findByTenantId(UUID tenantId);
      boolean existsByTenantName(String tenantName);
-    boolean existsByAdminUser_Email(String adminEmail);
-    
-    List<Tenant> findAllByStatus(TenantStatus status);
-
     Tenant findByTenantName(String tenantName);
 }

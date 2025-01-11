@@ -7,7 +7,5 @@ import jakarta.validation.constraints.NotBlank;
 public class TenantRequestDTO {
     @NotBlank(message = "Tenant name is required")
     private String tenantName;
-    @NotBlank(message = "Admin email is required")
-    @Email(message = "Invalid email format")
-    private String adminEmail;
+
 }

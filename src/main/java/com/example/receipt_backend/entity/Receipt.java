@@ -1,6 +1,5 @@
 package com.example.receipt_backend.entity;
 
-import com.example.receipt_backend.utils.ListMapToJsonConverter;
 import com.example.receipt_backend.utils.MapToJsonConverter;
 import com.example.receipt_backend.utils.ReceiptStatus;
 import jakarta.persistence.*;
@@ -12,8 +11,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
 @Entity
@@ -45,10 +43,10 @@ public class Receipt {
     @Column(name = "status", nullable = false)
     private ReceiptStatus status = ReceiptStatus.PENDING;
 
-    @Convert(converter = ListMapToJsonConverter.class)
+    @Convert(converter = MapToJsonConverter.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "ocr_data", columnDefinition = "jsonb")
-    private List<Map<Integer, String>> ocrData;
+    private HashMap<Integer, String> ocrData;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by_user_id")

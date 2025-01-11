@@ -5,6 +5,7 @@ import com.example.receipt_backend.dto.request.RegisterUserByAdminDto;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.entity.User;
+import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.security.AppSecurityUtils;
 import com.example.receipt_backend.service.UserService;
@@ -39,8 +40,7 @@ public class UserController {
     @Operation(summary = "Create a new user by tenant admin", description = "Create a new user with the specified details")
 
     public ResponseEntity<GenericResponseDTO<Boolean>> createUserByAdmin(@RequestBody RegisterUserByAdminDto userDTO) {
-        GenericResponseDTO<Boolean> response = userService.createUserByAdmin(userDTO);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return userService.createUserByAdmin(userDTO);
     }
 
     @GetMapping
@@ -67,12 +67,13 @@ public class UserController {
         return new ResponseEntity<>(createdUserDto, HttpStatus.CREATED);
     }
 
-    @PutMapping
+    @PutMapping({"/{id}"})
     @Operation(summary = "Update user", description = "Update an existing user's details")
-    public ResponseEntity<GenericResponseDTO<Boolean>> updateUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<GenericResponseDTO<Boolean>> updateUser(@PathVariable UUID id,
+                                                                  @RequestBody UserDTO userDTO) {
         log.info("User API: updateEntity user");
         try {
-            userService.updateUser(userDTO);
+            userService.updateUser(id, userDTO);
             GenericResponseDTO<Boolean> build = GenericResponseDTO.<Boolean>builder().response(true).build();
             return new ResponseEntity<>(build, HttpStatus.OK);
         } catch (Exception e) {
@@ -105,5 +106,22 @@ public class UserController {
         GenericResponseDTO<Boolean> genericResponseDTO = userService.userEmailExists(email);
         return new ResponseEntity<>(genericResponseDTO, HttpStatus.OK);
     }
+@DeleteMapping("/bulk-delete")
+@PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
+@Operation(summary = "Bulk Delete Users", description = "Deletes multiple users by their IDs")
+public ResponseEntity<GenericResponseDTO<Boolean>> deleteUsers(@RequestBody List<UUID> userIds) {
+    try {
+        userService.deleteUsers(userIds);
+        return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(true).build(), HttpStatus.OK);
+    } catch (ResourceNotFoundException e) {
+        // If any of the users are not found
+        return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(false).messageCode(e.getMessage()).build(), HttpStatus.NOT_FOUND);
+    } catch (Exception e) {
+        // For any other errors
+        return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(false).messageCode("Failed to delete users.").build(), HttpStatus.BAD_REQUEST);
+    }
+}
+
+
 
 }

@@ -29,19 +29,9 @@ public class TenantController {
     @PreAuthorize("hasRole('ROLE_SYSTEM_ADMIN')")
     @PostMapping
     @Operation(summary = "Create a new tenant", description = "Allows a system admin to create a new tenant")
-    public ResponseEntity<TenantResponseDTO> createTenant(@Validated @RequestBody TenantRequestDTO tenantRequest) {
-        TenantResponseDTO createdTenant = tenantService.createTenant(tenantRequest);
+    public ResponseEntity<TenantResponseDTO> createTenant(@RequestParam String tenantName) {
+        TenantResponseDTO createdTenant = tenantService.createTenant(tenantName);
         return new ResponseEntity<>(createdTenant, HttpStatus.CREATED);
-    }
-
-    @PreAuthorize("hasAnyRole('ROLE_SYSTEM_ADMIN', 'ROLE_COMPANY_ADMIN')")
-    @PutMapping("/{id}")
-    @Operation(summary = "Update an existing tenant", description = "Allows a system or company admin to update tenant details")
-    public ResponseEntity<TenantResponseDTO> updateTenant(
-            @PathVariable UUID id,
-            @Validated @RequestBody UpdateTenantRequestDTO tenantRequest) {
-        TenantResponseDTO updatedTenant = tenantService.updateTenant(id, tenantRequest);
-        return new ResponseEntity<>(updatedTenant, HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_SYSTEM_ADMIN')")
@@ -76,7 +66,7 @@ public class TenantController {
         return new ResponseEntity<>(tenant, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ROLE_SYSTEM_ADMIN')")
+
     @GetMapping
     @Operation(summary = "Get all tenants", description = "Allows a system admin to retrieve all tenants")
     public ResponseEntity<List<TenantResponseDTO>> getAllTenants() {

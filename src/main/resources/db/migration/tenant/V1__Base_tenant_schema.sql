@@ -27,7 +27,7 @@ CREATE TABLE receipt_type_fields (
 CREATE TABLE upload_requests (
                                  request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                  status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-                                 uploaded_by_user_id UUID NOT NULL,
+                                 uploaded_by_user_id UUID NULL,
                                  uploaded_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
                                  CONSTRAINT fk_upload_requests_uploaded_by_user
                                      FOREIGN KEY(uploaded_by_user_id)

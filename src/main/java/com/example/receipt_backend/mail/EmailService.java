@@ -16,7 +16,6 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -209,6 +208,43 @@ public class EmailService extends AbstractDefaultEmailService {
             log.error("sendWelcomeEmailWithPassword failed MessagingException {} ", e.getMessage());
         } catch (Exception e) {
             log.error("sendWelcomeEmailWithPassword failed Exception {} ", e.getMessage());
+        }
+    }
+
+    public void sendInvitationEmail(String destinationEmail,
+                                    String invitationToken) {
+        log.info("Initiated: sendInvitationEmail - to {} ", destinationEmail);
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage,
+                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    StandardCharsets.UTF_8.name());
+
+            // Populate the template data for Invitation Email
+            Map<String, Object> templateData = new HashMap<>();
+            templateData.put("invitationToken", invitationToken);
+            templateData.put("expiration", appProperties.getJwt().getExpirationMillis() / (1000 * 60 * 60) + " hours"); // Convert ms to hours
+            templateData.put("officialCompanyName", officialCompanyName);
+
+            // Retrieving (invitation mail) template file to set populated data
+            String templatePath = "invitation.ftlh"; // Ensure this path is correct
+            String templateContent = FreeMarkerTemplateUtils.processTemplateIntoString(
+                    freemarkerConfigurer.getConfiguration().getTemplate(templatePath),
+                    templateData);
+
+            // Sending email
+            helper.setTo(destinationEmail);
+            helper.setSubject("Invitation to Join " + officialCompanyName);
+            helper.setText(templateContent, true);
+            helper.setFrom(appProperties.getMail().getDefaultEmailAddress()); // Ensure 'from' address is set
+            javaMailSender.send(mimeMessage);
+
+            log.info("Completed: sendInvitationEmail to {}", destinationEmail);
+        } catch (MessagingException e) {
+            log.error("sendInvitationEmail failed MessagingException: {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("sendInvitationEmail failed Exception: {}", e.getMessage());
         }
     }
 

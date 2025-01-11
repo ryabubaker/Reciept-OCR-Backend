@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -47,103 +48,21 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
-    public TenantResponseDTO createTenant(TenantRequestDTO request) {
+    public TenantResponseDTO createTenant(String tenantName) {
         // Check if tenant name already exists
-        if (tenantRepository.existsByTenantName(request.getTenantName())) {
+        if (tenantRepository.existsByTenantName(tenantName)) {
             throw new IllegalArgumentException("Tenant name already exists.");
         }
-        tenantSchemaService.createTenantSchema(request.getTenantName());
-        
-        // Convert the request to a Tenant entity
-        Tenant tenant = tenantMapper.toEntity(request);
+        tenantSchemaService.createTenantSchema(tenantName);
+
+        // Create tenant in Entity
+        Tenant tenant = new Tenant();
+        tenant.setTenantName(tenantName);
         
         // Save the tenant to generate a tenantId
         Tenant savedTenant = tenantRepository.save(tenant);
-    
-        // Create the admin user with the saved tenant
-        User adminUser = createAdminUser(request, savedTenant);
-    
-        // Set the admin user for the tenant
-        savedTenant.setAdminUser(adminUser);
-        
-        // Save the tenant again with the admin user set
-        savedTenant = tenantRepository.save(savedTenant);
         
         return tenantMapper.toDto(savedTenant);
-    }
-    
-    @Transactional
-    public User createAdminUser(TenantRequestDTO request, Tenant tenant) {
-        // Check if the admin email is already associated with another tenant
-        if (userRepository.existsByEmailAndTenant_TenantName(request.getAdminEmail(), request.getTenantName())) {
-            throw new IllegalArgumentException("Admin email already associated with another tenant.");
-        }
-    
-        // Fetch the ROLE_COMPANY_ADMIN role
-        RoleEntity companyAdminRole = roleService.getRoleByName(RoleType.ROLE_COMPANY_ADMIN);
-    
-        // Generate a random password for the admin user
-        String generatedPassword = AppUtils.generateRandomAlphaNumericString(10);
-    
-        // Build UserDTO with the correct tenantId
-        UserDTO adminUserDto = UserDTO.builder()
-                .username(request.getAdminEmail())
-                .email(request.getAdminEmail())
-                .emailVerified(true)
-                .password(generatedPassword)
-                .registeredProviderName(SecurityEnums.AuthProviderId.local)
-                .roles(Set.of(companyAdminRole.getName().toString()))
-                .tenantId(tenant.getTenantId().toString()) // Use tenantId from the saved tenant
-                .build();
-    
-        // Create the admin user
-        User createdAdminUser = userService.createUser(adminUserDto, tenant.getTenantId().toString(), RoleType.ROLE_COMPANY_ADMIN);
-    
-        // Send a welcome email with the generated password
-        emailService.sendWelcomeEmailWithPassword(createdAdminUser.getEmail(), createdAdminUser.getEmail(), generatedPassword);
-    
-        // Retrieve the admin user from the repository
-        User adminUser = userRepository.findByEmail(createdAdminUser.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
-    
-        return adminUser;
-    }
-
-
-    @Override
-    @Transactional
-    public TenantResponseDTO updateTenant(UUID tenantId, UpdateTenantRequestDTO request) {
-        Tenant tenant = getTenant(tenantId);
-        
-        if (request.getTenantName() != null && !tenant.getTenantName().equals(request.getTenantName())) {
-            if (tenantRepository.existsByTenantName(request.getTenantName())) {
-                throw new IllegalArgumentException("Tenant name already exists.");
-            }
-            String oldSchemaName = tenant.getTenantName();
-            tenant.setTenantName(request.getTenantName());
-            tenantSchemaService.renameTenantSchema(oldSchemaName, request.getTenantName());
-        }
-
-        if (request.getAdminEmail() != null && !tenant.getAdminUser().getEmail().equals(request.getAdminEmail())) {
-
-            User newAdmin = createAdminUser(request, tenant);
-
-            // Demote Old Admin
-            User oldAdmin = tenant.getAdminUser();
-            oldAdmin.getRoles().removeIf(role -> role.getName() == RoleType.ROLE_COMPANY_ADMIN);
-            userRepository.save(oldAdmin);
-
-            // Update Tenant Admin
-            tenant.setAdminUser(newAdmin);
-        }
-
-        if (request.getStatus() != null) {
-            tenant.setStatus(request.getStatus());
-        }
-
-        Tenant updatedTenant = tenantRepository.save(tenant);
-
-        return tenantMapper.toDto(updatedTenant);
     }
 
     @Override

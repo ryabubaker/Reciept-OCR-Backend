@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,7 +48,7 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
 
         try {
             // Use the ReceiptType method to extract column2idxMap
-            Map<String, Integer> column2idxMap = ReceiptType.extractColumn2IdxMap(requestDTO.getTemplate());
+            HashMap<String, Integer> column2idxMap = ReceiptType.extractColumn2IdxMap(requestDTO.getTemplate());
             Map<String, Object> map = readTemplate(key);
 
             // Create and save ReceiptType entity
@@ -86,7 +87,7 @@ public class ReceiptTypeServiceImpl implements ReceiptTypeService {
                 existing.setTemplatePath(key);
     
                 // Update the column2idxMap
-                Map<String, Integer> column2idxMap = ReceiptType.extractColumn2IdxMap(updateDto.getTemplate());
+                HashMap<String, Integer> column2idxMap = ReceiptType.extractColumn2IdxMap(updateDto.getTemplate());
                 existing.setColumn2idxMap(column2idxMap);
             }
     

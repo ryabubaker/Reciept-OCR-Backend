@@ -5,7 +5,6 @@ import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierRes
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.User;
-import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.repository.RoleRepository;
 import com.example.receipt_backend.security.CustomUserDetails;
@@ -28,7 +27,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -103,7 +101,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         userDTO.setEmail(customAbstractOAuth2UserInfo.getEmail());
         userDTO.setRegisteredProviderName(SecurityEnums.AuthProviderId.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()));
         userDTO.setRegisteredProviderId(customAbstractOAuth2UserInfo.getId());
-        userDTO.setRoles(Collections.singleton(getUserRoleBasedOnRequest().getName().toString()));
+        userDTO.setRole(getUserRoleBasedOnRequest().getName().toString());
         userDTO.setEmailVerified(true);
         userDTO.setTenantId(tenantId);
         User user = userService.createUser(userDTO, tenantId, RoleType.ROLE_MOBILE_USER);
@@ -124,7 +122,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                                          CustomAbstractOAuth2UserInfo customAbstractOAuth2UserInfo) {
         existingUserDTO.setUsername(customAbstractOAuth2UserInfo.getName());
         existingUserDTO.setImageUrl(customAbstractOAuth2UserInfo.getImageUrl());
-        UserDTO updatedUserDTO = userService.updateUser(existingUserDTO);
+        UserDTO updatedUserDTO = userService.updateUser(existingUserDTO.getId(), existingUserDTO);
         BeanUtils.copyProperties(updatedUserDTO, existingUserDTO);
     }
 

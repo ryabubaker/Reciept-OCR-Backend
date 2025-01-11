@@ -43,7 +43,7 @@ public class CustomUserDetails implements OAuth2User, UserDetails {
     public static CustomUserDetails buildFromUserEntity(User user) {
 
         Collection<? extends GrantedAuthority> grantedAuthorities = AppSecurityUtils
-                .convertRolesSetToGrantedAuthorityList(user.getRoles());
+                .convertRolesSetToGrantedAuthorityList(user.getRole());
         return new CustomUserDetails(
                 user.getEmail(),
                 user.getPassword(),

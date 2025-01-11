@@ -1,47 +1,52 @@
 package com.example.receipt_backend.controller;
 
-import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.*;
 import com.example.receipt_backend.dto.response.AuthResponseDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.service.AuthenticationService;
 import com.example.receipt_backend.service.UserService;
-import com.example.receipt_backend.utils.RoleType;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 @Tag(name = "Authentication", description = "APIs for user authentication and account management")
 public class AuthenticationController {
 
-    private final AuthenticationService authenticationService;
+    private final AuthenticationService authService;
     private final UserService userService;
 
-    public AuthenticationController(AuthenticationService authenticationService,
-                                    UserService userService) {
-        this.authenticationService = authenticationService;
-        this.userService = userService;
-    }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> loginUser(@RequestBody LoginRequestDTO loginRequest) {
-        AuthResponseDTO authResponseDTO = authenticationService.loginUser(loginRequest);
+        AuthResponseDTO authResponseDTO = authService.loginUser(loginRequest);
         return ResponseEntity.ok(authResponseDTO);
     }
 
+//    @PostMapping("/create-user")
+//    public ResponseEntity< GenericResponseDTO<Boolean>> registerUser(@Valid @RequestBody RegisterUserRequestDTO registerUserRequestDTO) {
+//        GenericResponseDTO<Boolean> userDTO = authService.registerUser(registerUserRequestDTO);
+//        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+//    }
+
     @PostMapping("/register")
-    public ResponseEntity< GenericResponseDTO<Boolean>> registerUser(@Valid @RequestBody RegisterUserRequestDTO registerUserRequestDTO) {
-        GenericResponseDTO<Boolean> userDTO = authenticationService.registerUser(registerUserRequestDTO);
-        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+    public ResponseEntity<GenericResponseDTO<Boolean>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        GenericResponseDTO<Boolean> response = authService.registerUserWithInvitation(registerRequest);
+        HttpStatus status = response.getResponse() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+        return new ResponseEntity<>(response, status);
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<AuthResponseDTO> refreshAccessToken(@RequestBody RefreshTokenRequestDTO refreshTokenRequest) {
+        AuthResponseDTO authResponseDTO = authService.refresh(refreshTokenRequest.getRefreshToken());
+        return ResponseEntity.ok(authResponseDTO);
     }
 
     @GetMapping("/resend-verification-email")

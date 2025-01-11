@@ -35,7 +35,7 @@ public class UserDTO {
 
     private String imageUrl;
 
-    private Set<String> roles;
+    private String role;
 
     private String phoneNumber;
 

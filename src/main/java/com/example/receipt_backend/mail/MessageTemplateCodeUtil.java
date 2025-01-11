@@ -49,6 +49,10 @@ public class MessageTemplateCodeUtil {
         // Admin login template keys
         public static final String adminPassword = "password";
 
+        // Invitation template keys
+        public static final String invitationToken = "invitationToken";
+        public static final String expiration = "expiration";
+
     }
 
 

@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TenantService {
-    TenantResponseDTO createTenant(TenantRequestDTO tenantRequest);
+    TenantResponseDTO createTenant(String tenantName);
 
     //User createAdminUser(TenantRequestDTO request, Tenant tenant);
 
-    @Transactional
-    TenantResponseDTO updateTenant(UUID tenantId, UpdateTenantRequestDTO request);
+//    @Transactional
+//    TenantResponseDTO updateTenant(UUID tenantId, UpdateTenantRequestDTO request);
 
     @Transactional
     void inactivateTenant(UUID tenantId);

@@ -8,7 +8,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring")
@@ -17,6 +19,7 @@ public interface ReceiptMapper {
     @Named("mapReceiptsToDTOs")
     List<ReceiptDTO> mapReceiptsToDTOs(List<Receipt> receipts);
 
+    @Mapping(target = "requestId", source = "request.requestId")
     @Mapping(target = "receiptTypeId", source = "receiptType.receiptTypeId")
     @Mapping(target = "approvedBy", source = "approvedBy.id")
     @Mapping(target = "receiptTypeName", source = "receiptType.name")

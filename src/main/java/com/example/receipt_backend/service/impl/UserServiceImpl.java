@@ -11,7 +11,6 @@ import com.example.receipt_backend.exception.BadRequestException;
 import com.example.receipt_backend.exception.CustomAppException;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.UserMapper;
-import com.example.receipt_backend.repository.RoleRepository;
 import com.example.receipt_backend.repository.TenantRepository;
 import com.example.receipt_backend.repository.UserRepository;
 import com.example.receipt_backend.security.SecurityEnums;
@@ -23,12 +22,15 @@ import com.example.receipt_backend.utils.RoleType;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.*;
@@ -44,7 +46,6 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final AppProperties appProperties;
     private final TenantRepository tenantRepository;
-    private final RoleRepository roleRepository;
 
     @Override
     public List<UserDTO> getAllUsers(Pageable pageable) {
@@ -76,43 +77,53 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User createUser(UserDTO userDto, String tenantId, RoleType roleType) {
         if (userRepository.existsByEmailAndTenant_TenantId(userDto.getEmail(), UUID.fromString(tenantId))) {
-            throw new CustomAppException("User already exists for this tenant.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User already exists for this tenant.");
         }
         boolean isFromCustomBasicAuth = SecurityEnums.AuthProviderId.local.equals(userDto.getRegisteredProviderName());
         if (isFromCustomBasicAuth && userDto.getPassword() != null) {
             userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
-
-        if (ObjectUtils.isEmpty(userDto.getRoles())) {
-            userDto.setRoles(Set.of(roleType.toString()));
+    
+        if (ObjectUtils.isEmpty(userDto.getRole())) {
+            userDto.setRole(roleType.toString());
         }
-
+    
         User user = userMapper.toEntity(userDto);
-
-
-
+    
         Tenant tenant = tenantRepository.findByTenantId(UUID.fromString(tenantId))
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.TENANT_NOT_FOUND));
-
+    
         user.setTenant(tenant);
-
+    
+        // Save the user
         userRepository.save(user);
-
-        if (!user.isEmailVerified()){
+    
+        // If the role is ROLE_COMPANY_ADMIN, add the user to the list of admin users in the tenant
+        if (RoleType.ROLE_COMPANY_ADMIN.equals(roleType)) {
+            List<User> adminUsers = tenant.getAdminUsers();
+            if (adminUsers == null) {
+                adminUsers = new ArrayList<>();
+            }
+            adminUsers.add(user);
+            tenant.setAdminUsers(adminUsers);
+            tenantRepository.save(tenant);
+        }
+    
+        if (!user.isEmailVerified()) {
             sendVerificationEmail(user.getEmail());
         }
-
+    
         return user;
     }
 
     @Override
-    public UserDTO updateUser(UserDTO reqUserDTO) {
-        User user = userRepository.findById(reqUserDTO.getId())
+    public UserDTO updateUser(UUID id, UserDTO reqUserDTO) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
-
+    
         userMapper.updateEntity(reqUserDTO, user);
         userRepository.save(user);
-        return userMapper.toDto(user) ;
+        return userMapper.toDto(user);
     }
 
     @Override
@@ -197,7 +208,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public GenericResponseDTO<Boolean> createUserByAdmin(RegisterUserByAdminDto request) {
+    public ResponseEntity<GenericResponseDTO<Boolean>> createUserByAdmin(RegisterUserByAdminDto request) {
+        try {
+            System.out.println("Creating admin user with email: " + request.getEmail());
+
             String tenantName = CurrentTenantIdentifierResolverImpl.getTenant();
             String tenantId = tenantRepository.findByTenantName(tenantName).getTenantId().toString();
 
@@ -212,7 +226,7 @@ public class UserServiceImpl implements UserService {
                     .emailVerified(true)
                     .password(generatedPassword)
                     .registeredProviderName(SecurityEnums.AuthProviderId.local)
-                    .roles(Set.of(request.getRoleType()))
+                    .role(request.getRoleType())
                     .tenantId(tenantId) // Use tenantId from the saved tenant
                     .build();
 
@@ -223,9 +237,26 @@ public class UserServiceImpl implements UserService {
 
             // Send a welcome email with the generated password
             emailService.sendWelcomeEmailWithPassword(createdUser.getEmail(), createdUser.getEmail(), generatedPassword);
-            return GenericResponseDTO.<Boolean>builder().response(true).build();
+            return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(true).build(), HttpStatus.OK);
 
+        } catch (CustomAppException e) {
+            // If the email already exists
+            return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(false).build(), HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            // For any other errors
+            return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(false).build(), HttpStatus.BAD_REQUEST);
+        }
     }
+    @Override
+    @Transactional
+    public void deleteUsers(List<UUID> userIds) {
+        List<User> users = userRepository.findAllById(userIds);
+        if (users.size() != userIds.size()) {
+            throw new ResourceNotFoundException("Some users not found.");
+        }
+        userRepository.deleteAll(users);
+    }
+
 
 
     private static MultiValueMap<String, String> constructEmailVerificationLinkQueryParams(String email,
@@ -247,5 +278,6 @@ public class UserServiceImpl implements UserService {
         appendQueryParams.add("forgotPasswordVerCode", forgotPasswordVerCode);
         return appendQueryParams;
     }
+
 
 }

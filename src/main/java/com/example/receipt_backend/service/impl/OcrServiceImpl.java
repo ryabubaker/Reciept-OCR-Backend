@@ -72,9 +72,10 @@ public class OcrServiceImpl implements OcrService {
             throw new BadRequestException("OCR service returned unsuccessful status.");
         }
 
-        List<Map<Integer, String>> extractedData = ocrResponse.getData().stream()
+        HashMap<Integer, String> extractedData = ocrResponse.getData().stream()
                 .map(this::convertOcrResultToMap)
-                .collect(Collectors.toList());
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, HashMap::new));
 
         return ReceiptProcessingResult.builder()
                 .success(true)

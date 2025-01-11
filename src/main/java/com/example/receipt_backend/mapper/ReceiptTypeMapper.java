@@ -21,11 +21,5 @@ public interface ReceiptTypeMapper {
     @Mapping(target = "column2idxMap", source = "column2idxMap")
     ReceiptTypeResponseDTO toResponseDTO(ReceiptType receiptType);
 
-
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "name", source = "name")
-    @Mapping(target = "templatePath", ignore = true)
-    void updateEntity(ReceiptTypeUpdateRequestDTO dto, @MappingTarget ReceiptType entity);
-
    
 }

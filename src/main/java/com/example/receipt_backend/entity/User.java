@@ -42,18 +42,18 @@ public class User extends AbstractGenericPKAuditableEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinTable(
             name = "user_roles",
-            schema = "public", // Specify the schema explicitly
+            schema = "public",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<RoleEntity> roles;
+    private RoleEntity role;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = true)
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
     private Tenant tenant;
 
     @Column(name = "phone_number")

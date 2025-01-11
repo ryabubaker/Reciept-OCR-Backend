@@ -3,6 +3,7 @@ package com.example.receipt_backend.dto.response;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,6 @@ import java.util.Map;
 @Builder
 public class ReceiptProcessingResult {
     private boolean success;
-    private List<Map<Integer, String>> extractedData;
+    private HashMap<Integer, String> extractedData;
     private String error;
 }

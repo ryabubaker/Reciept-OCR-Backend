@@ -1,9 +1,11 @@
 package com.example.receipt_backend.controller;
 
+import com.example.receipt_backend.dto.UpdateReceiptDto;
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
 import com.example.receipt_backend.service.ReceiptService;
+import com.example.receipt_backend.utils.RequestStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -42,11 +46,27 @@ public class RequestController {
         return ResponseEntity.ok(pendingReceipts);
     }
 
+
     @GetMapping("/{requestId}")
     @Operation(summary = "Get Receipts by Request ID", description = "Retrieves receipts for a specific request ID")
     public ResponseEntity<UploadResponseDTO> getReceiptsByRequestId(
             @Parameter(description = "Unique identifier of the request") @PathVariable UUID requestId) {
         UploadResponseDTO receipts = receiptService.getRequestById(requestId);
         return ResponseEntity.ok(receipts);
+    }
+@GetMapping("/after")
+@Operation(summary = "Get Requests After Date", description = "Retrieves requests created after a specific date and time")
+public ResponseEntity<List<UploadResponseDTO>> getRequestsAfterDate(
+        @Parameter @RequestParam String dateTime) {
+    LocalDateTime parsedDateTime = LocalDateTime.parse(dateTime);
+    List<UploadResponseDTO> requests = receiptService.getRequestsAfterDate(parsedDateTime);
+    return ResponseEntity.ok(requests);
+}
+
+    @PutMapping("/{requestId}")
+    public ResponseEntity<GenericResponseDTO<Boolean>> updateRequest(@PathVariable String requestId, @RequestParam RequestStatus status) {
+        receiptService.updateRequestStatus(requestId, status);
+
+        return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(true).messageCode("Updated successfully").build(), HttpStatus.OK);
     }
 }

@@ -9,10 +9,11 @@ import jakarta.persistence.Converter;
 import lombok.Setter;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @Converter
-public class MapToJsonConverter implements AttributeConverter<Map<String,Object>, String> {
+public class MapToJsonConverter implements AttributeConverter<HashMap<String,Object>, String> {
 
     // Setter method to inject ObjectMapper
     // Static ObjectMapper to be set via AppUtils
@@ -25,7 +26,7 @@ public class MapToJsonConverter implements AttributeConverter<Map<String,Object>
     }
 
     @Override
-    public String convertToDatabaseColumn(Map attribute) {
+    public String convertToDatabaseColumn(HashMap attribute) {
         if (attribute == null || attribute.isEmpty()) {
             return "{}";
         }
@@ -37,9 +38,9 @@ public class MapToJsonConverter implements AttributeConverter<Map<String,Object>
     }
 
     @Override
-    public Map<String, Object> convertToEntityAttribute(String dbData) {
+    public HashMap<String, Object> convertToEntityAttribute(String dbData) {
         if (dbData == null || dbData.isEmpty()) {
-            return Map.of();
+            return new HashMap<>();
         }
         try {
             return objectMapper.readValue(dbData, new TypeReference<>() {});

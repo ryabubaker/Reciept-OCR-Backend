@@ -29,6 +29,17 @@ spring:
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+          max-wait: -1ms
 
   servlet:
     multipart:
@@ -116,7 +127,8 @@ myapp:
     defaultPageSize: 50
 
   jwtSecret: ${JWT_SECRET_KEY}
-  jwtExpirationMs: 86400000
+  jwtExpirationMs: 24 * 60 * 60 * 1000
+  jwtRefreshExpirationMs: 30 * 24 * 60 * 60 * 1000
 
   ocr:
     base-url: http://127.0.0.1:5000

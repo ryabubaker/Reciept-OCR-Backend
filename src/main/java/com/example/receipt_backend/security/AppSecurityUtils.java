@@ -33,13 +33,11 @@ public class AppSecurityUtils {
     /**
      * Converts list of roles into Collection of GrantedAuthority
      *
-     * @param roles
+     * @param role
      * @return Collection<? extends GrantedAuthority>
      */
-    public static List<GrantedAuthority> convertRolesSetToGrantedAuthorityList(Set<RoleEntity> roles) {
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName().toString()))
-                .collect(Collectors.toList());
+    public static List<GrantedAuthority> convertRolesSetToGrantedAuthorityList(RoleEntity role) {
+        return Collections.singletonList(new SimpleGrantedAuthority(role.getName().toString()));
     }
 
     /**

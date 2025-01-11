@@ -48,10 +48,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         }
 
         CustomUserDetails userDetails = CustomUserDetails.buildFromUserEntity(user);
-        String token = jwtUtils.generateJwtToken(userDetails);
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
 
         // Return the token in response or redirect as needed
         response.setContentType("application/json");
-        response.getWriter().write("{\"token\": \"" + token + "\"}");
+        response.getWriter().write("{\"accessToken\": \"" + accessToken + "\"}");
     }
 }

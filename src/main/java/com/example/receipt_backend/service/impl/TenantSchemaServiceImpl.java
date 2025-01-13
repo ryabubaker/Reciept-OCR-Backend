@@ -52,7 +52,8 @@ public class TenantSchemaServiceImpl implements TenantSchemaService {
             flyway.migrate();
 
         } catch (SQLException e) {
-            throw new CustomAppException("Failed to create schema for tenant: " + tenant, e);
+            e.printStackTrace();
+            throw new CustomAppException("Failed to create schema for tenant: " + tenant);
         }
     }
 
@@ -73,7 +74,8 @@ public class TenantSchemaServiceImpl implements TenantSchemaService {
             stmt.executeUpdate(dropSchemaQuery);
 
         } catch (SQLException e) {
-            throw new CustomAppException("Failed to delete schema for tenant: " + tenantName, e);
+            e.printStackTrace();
+            throw new CustomAppException("Failed to delete schema for tenant: " + tenantName);
         }
     }
 
@@ -86,7 +88,8 @@ public class TenantSchemaServiceImpl implements TenantSchemaService {
             stmt.executeUpdate(renameSchemaQuery);
 
         } catch (SQLException e) {
-            throw new CustomAppException("Failed to rename schema from " + oldSchemaName + " to " + newSchemaName, e);
+            e.printStackTrace();
+            throw new CustomAppException("Failed to rename schema from " + oldSchemaName + " to " + newSchemaName);
         }
     }
 

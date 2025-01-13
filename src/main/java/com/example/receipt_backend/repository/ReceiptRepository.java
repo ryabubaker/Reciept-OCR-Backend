@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -14,4 +15,6 @@ public interface ReceiptRepository extends JpaRepository<Receipt, UUID>, JpaSpec
 
 
     Collection<Receipt> findAllByStatus(ReceiptStatus receiptStatus);
+
+    Optional<Receipt> findByReceiptId(UUID uuid);
 }

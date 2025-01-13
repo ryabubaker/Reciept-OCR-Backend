@@ -8,7 +8,7 @@ import com.example.receipt_backend.dto.response.GenericResponseDTO;
 
 public interface AuthenticationService {
 
-    GenericResponseDTO<Boolean> registerUserWithInvitation(RegisterRequest registerRequest);
+    GenericResponseDTO<String> registerUserWithInvitation(RegisterRequest registerRequest);
 
     AuthResponseDTO loginUser(LoginRequestDTO loginRequest);
 

@@ -7,8 +7,8 @@ import com.example.receipt_backend.dto.response.TenantResponseDTO;
 import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.Tenant;
 import com.example.receipt_backend.entity.User;
-import com.example.receipt_backend.exception.AppExceptionConstants;
 import com.example.receipt_backend.exception.CustomAppException;
+import com.example.receipt_backend.exception.ErrorCode;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mail.EmailService;
 import com.example.receipt_backend.mapper.TenantMapper;
@@ -40,10 +40,6 @@ public class TenantServiceImpl implements TenantService {
     private final TenantSchemaService tenantSchemaService;
     private final TenantRepository tenantRepository;
     private final TenantMapper tenantMapper;
-    private final UserRepository userRepository;
-    private final UserService userService;
-    private final RoleService roleService;
-    private final EmailService emailService;
     private final UserMapper userMapper;
 
     @Override
@@ -51,17 +47,22 @@ public class TenantServiceImpl implements TenantService {
     public TenantResponseDTO createTenant(String tenantName) {
         // Check if tenant name already exists
         if (tenantRepository.existsByTenantName(tenantName)) {
-            throw new IllegalArgumentException("Tenant name already exists.");
+            throw new CustomAppException(
+                    ErrorCode.TENANT_ALREADY_EXISTS,
+                    ErrorCode.TENANT_ALREADY_EXISTS.getMessage()
+            );
         }
+
+        // Create the tenant schema in the database
         tenantSchemaService.createTenantSchema(tenantName);
 
-        // Create tenant in Entity
+        // Create tenant entity
         Tenant tenant = new Tenant();
         tenant.setTenantName(tenantName);
-        
+
         // Save the tenant to generate a tenantId
         Tenant savedTenant = tenantRepository.save(tenant);
-        
+
         return tenantMapper.toDto(savedTenant);
     }
 
@@ -69,7 +70,9 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     public void inactivateTenant(UUID tenantId) {
         Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.TENANT_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.TENANT_NOT_FOUND)
+                );
 
         tenant.setStatus(TenantStatus.INACTIVE);
         tenantRepository.save(tenant);
@@ -79,7 +82,9 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     public void activateTenant(UUID tenantId) {
         Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.TENANT_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.TENANT_NOT_FOUND)
+                );
 
         tenant.setStatus(TenantStatus.ACTIVE);
         tenantRepository.save(tenant);
@@ -89,12 +94,15 @@ public class TenantServiceImpl implements TenantService {
     @Transactional
     public void deleteTenant(UUID tenantId) {
         Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.TENANT_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.TENANT_NOT_FOUND));
+
         try {
             tenantSchemaService.deleteTenantSchema(tenant.getTenantName());
         } catch (CustomAppException e) {
-            throw new CustomAppException("Failed to delete tenant schema. Tenant deletion aborted.", e);
-        }        tenantRepository.delete(tenant);
+            e.printStackTrace();
+            tenantRepository.delete(tenant);
+        }
     }
 
     @Override
@@ -106,7 +114,9 @@ public class TenantServiceImpl implements TenantService {
 
     private Tenant getTenant(UUID id) {
         return tenantRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.TENANT_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.TENANT_NOT_FOUND)
+                );
     }
 
     @Override
@@ -116,15 +126,16 @@ public class TenantServiceImpl implements TenantService {
                 .map(tenantMapper::toDto)
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<UserDTO> getUsersByTenantId(UUID tenantId) {
         Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        ErrorCode.TENANT_NOT_FOUND));
+
         return tenant.getUsers().stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
     }
-
 }

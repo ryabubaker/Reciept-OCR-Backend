@@ -39,7 +39,7 @@ public class TenantController {
     @Operation(summary = "Delete a tenant", description = "Allows a system admin to delete a tenant")
     public ResponseEntity<GenericResponseDTO<String>> deleteTenant(@PathVariable UUID id) {
         tenantService.deleteTenant(id);
-        return new ResponseEntity<>(new GenericResponseDTO<>("Tenant deleted successfully", "200"), HttpStatus.OK);
+        return new ResponseEntity<>(new GenericResponseDTO<>("Tenant deleted successfully"), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_SYSTEM_ADMIN')")
@@ -47,7 +47,7 @@ public class TenantController {
     @Operation(summary = "Inactivate a tenant", description = "Allows a system admin to inactivate a tenant")
     public ResponseEntity<GenericResponseDTO<String>> inactivateTenant(@PathVariable UUID id) {
         tenantService.inactivateTenant(id);
-        return new ResponseEntity<>(new GenericResponseDTO<>("Tenant inactivated successfully", "200"), HttpStatus.OK);
+        return new ResponseEntity<>(new GenericResponseDTO<>("Tenant inactivated successfully"), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_SYSTEM_ADMIN')")
@@ -55,7 +55,7 @@ public class TenantController {
     @Operation(summary = "Activate a tenant", description = "Allows a system admin to activate a tenant")
     public ResponseEntity<GenericResponseDTO<String>> activateTenant(@PathVariable UUID id) {
         tenantService.activateTenant(id);
-        return new ResponseEntity<>(new GenericResponseDTO<>("Tenant activated successfully", "200"), HttpStatus.OK);
+        return new ResponseEntity<>(new GenericResponseDTO<>("Tenant activated successfully"), HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_SYSTEM_ADMIN', 'ROLE_COMPANY_ADMIN')")

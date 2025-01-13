@@ -35,7 +35,6 @@ public class ReceiptTypeController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
     @Operation(summary = "Get receipt type by name", description = "Retrieve a specific receipt type by its Name")
     public ResponseEntity<ReceiptTypeResponseDTO> getReceiptTypeById(
             @PathVariable String id) {
@@ -44,7 +43,6 @@ public class ReceiptTypeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
     @Operation(summary = "Get all receipt types", description = "Retrieve a list of all receipt types")
     public ResponseEntity<List<Map<String, Object>>> getAllReceiptTypes() {
         List<Map<String, Object>> receiptTypes = receiptTypeService.getAllReceiptTypes();
@@ -52,19 +50,18 @@ public class ReceiptTypeController {
     }
 
     @GetMapping("/json")
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MOBILE_USER', 'ROLE_DESKTOP_USER')")
     @Operation(summary = "Get all receipt types with Json", description = "Retrieve a list of all receipt types with their Json")
     public ResponseEntity<List<ReceiptTypeResponseDTO>> getAllReceiptTypesWithJson() {
         List<ReceiptTypeResponseDTO> receiptTypes = receiptTypeService.getAllReceiptTypesWithJson();
         return ResponseEntity.ok(receiptTypes);
     }
 
-    @PatchMapping("/{id}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Update a receipt type", description = "Allows a company admin to update an existing receipt type")
     public ResponseEntity<ReceiptTypeResponseDTO> updateReceiptType(
             @PathVariable String id,
-            @Valid @RequestBody ReceiptTypeUpdateRequestDTO requestDTO) throws IOException {
+            @Valid @RequestBody ReceiptTypeRequestDTO requestDTO) throws IOException {
         ReceiptTypeResponseDTO receiptTypeResponseDTO = receiptTypeService.updateReceiptType(id, requestDTO);
         return ResponseEntity.ok(receiptTypeResponseDTO);
     }

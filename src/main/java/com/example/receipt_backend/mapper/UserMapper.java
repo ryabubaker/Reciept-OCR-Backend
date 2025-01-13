@@ -12,6 +12,10 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = RoleMapper.class)
 public interface UserMapper {
 
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "username", source = "username")
+    @Mapping(target = "email", source = "email")
+    @Mapping(target = "password", source = "password")
     @Mapping(target = "role", source = "role", qualifiedByName = "mapStringToRole")
     User toEntity(UserDTO dto);
 
@@ -28,6 +32,5 @@ public interface UserMapper {
     List<UserDTO> toDtoList(List<User> list);
 
     @Mapping(target = "role", source = "role", qualifiedByName = "mapStringToRole")
-
     void updateEntity(UserDTO reqUserDTO, @MappingTarget User user);
 }

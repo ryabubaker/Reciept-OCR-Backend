@@ -58,7 +58,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 @Override
-public GenericResponseDTO<Boolean> registerUserWithInvitation(RegisterRequest registerRequest) {
+public GenericResponseDTO<String> registerUserWithInvitation(RegisterRequest registerRequest) {
     String token = registerRequest.getInvitationToken();
     String email = registerRequest.getEmail();
     InvitationServiceImpl.InvitationDetails details = invitationService.validateInvitation(token);
@@ -85,11 +85,10 @@ public GenericResponseDTO<Boolean> registerUserWithInvitation(RegisterRequest re
         // Register user
         userService.createUser(userDto, String.valueOf(details.getTenantId()), RoleType.ROLE_MOBILE_USER);
 
-        return new GenericResponseDTO<>(true, "User registered successfully.");
-
-    } catch (RuntimeException e) {
-        return new GenericResponseDTO<>(false, "Failed to register user: " + e.getMessage());
+    } catch (BadRequestException e) {
+        throw  new BadRequestException("Failed to register user"  );
     }
+    return null;
 }
 
     

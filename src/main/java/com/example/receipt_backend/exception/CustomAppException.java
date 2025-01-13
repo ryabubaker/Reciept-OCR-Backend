@@ -1,26 +1,27 @@
+// src/main/java/com/example/receipt_backend/exception/CustomAppException.java
 package com.example.receipt_backend.exception;
 
-import java.io.Serial;
+import lombok.Getter;
 
-// Base exception for custom application errors
+import java.sql.SQLException;
+
+@Getter
 public class CustomAppException extends RuntimeException {
+    private final ErrorCode errorCode;
 
-    @Serial
-    private final static  long serialVersionUID = 1L;
-
-    public CustomAppException() {
-        super();
+    public CustomAppException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
     }
 
-    public CustomAppException(String message) {
+    public CustomAppException(ErrorCode errorCode, String message) {
         super(message);
+        this.errorCode = errorCode;
     }
 
-    public CustomAppException(String message, Throwable cause) {
-        super(message, cause);
-    }
 
-    public CustomAppException(Throwable cause) {
-        super(cause);
+    public CustomAppException(String s) {
+        super(s);
+        this.errorCode = ErrorCode.DATABASE_ERROR;
     }
 }

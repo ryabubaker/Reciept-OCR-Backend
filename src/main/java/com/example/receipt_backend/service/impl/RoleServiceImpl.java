@@ -1,7 +1,7 @@
 package com.example.receipt_backend.service.impl;
 
 import com.example.receipt_backend.entity.RoleEntity;
-import com.example.receipt_backend.exception.AppExceptionConstants;
+import com.example.receipt_backend.exception.ErrorCode;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.repository.RoleRepository;
 import com.example.receipt_backend.service.RoleService;
@@ -20,6 +20,6 @@ public class RoleServiceImpl implements RoleService {
     @Cacheable(value = "roles", key = "#roleType.name()")
     public RoleEntity getRoleByName(RoleType roleType) {
         return roleRepository.findByName(roleType)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.ROLE_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCE_NOT_FOUND.getMessage()));
     }
 }

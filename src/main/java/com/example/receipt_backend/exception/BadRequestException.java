@@ -3,16 +3,16 @@ package com.example.receipt_backend.exception;
 import java.io.Serial;
 
 // Bad Request Exception for invalid requests
-public class BadRequestException extends RuntimeException {
+public class BadRequestException extends CustomAppException {
 
-    @Serial
-    private final static  long serialVersionUID = 1L;
+
+    public BadRequestException(ErrorCode errorCode, String message) {
+        super(errorCode, message);
+    }
 
     public BadRequestException(String message) {
-        super(message);
+        super(ErrorCode.BAD_REQUEST, message);
     }
 
-    public BadRequestException(String message, Throwable cause) {
-        super(message, cause);
-    }
+
 }

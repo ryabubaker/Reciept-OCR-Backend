@@ -1,12 +1,17 @@
+// src/main/java/com/example/receipt_backend/exception/ResourceNotFoundException.java
 package com.example.receipt_backend.exception;
 
-import java.io.Serial;
-
-public class ResourceNotFoundException extends RuntimeException {
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class ResourceNotFoundException extends CustomAppException {
+    public ResourceNotFoundException() {
+        super(ErrorCode.RESOURCE_NOT_FOUND);
+    }
 
     public ResourceNotFoundException(String message) {
-        super(message);
+        super(ErrorCode.RESOURCE_NOT_FOUND, message);
+    }
+
+    public ResourceNotFoundException(ErrorCode errorCode) {
+        super(errorCode);
     }
 }
+

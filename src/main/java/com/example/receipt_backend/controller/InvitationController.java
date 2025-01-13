@@ -28,8 +28,7 @@ public class InvitationController {
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_SYSTEM_ADMIN')")
-    public ResponseEntity<GenericResponseDTO<Boolean>> sendInvitation(@Valid @RequestBody InvitationRequest invitationRequest) {
-        try {
+    public ResponseEntity<GenericResponseDTO<String>> sendInvitation(@Valid @RequestBody InvitationRequest invitationRequest) {
             // Generate invitation token
             String token = invitationService.generateInvitationToken(
                     invitationRequest.getEmail(),
@@ -39,12 +38,9 @@ public class InvitationController {
             // Send invitation email
             emailService.sendInvitationEmail(invitationRequest.getEmail(), token);
 
-            GenericResponseDTO<Boolean> response = new GenericResponseDTO<>(true, "Invitation sent successfully.");
+            GenericResponseDTO<String> response = new GenericResponseDTO<>("Invitation sent successfully." );
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            GenericResponseDTO<Boolean> response = new GenericResponseDTO<>(false, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+
     }
 
     // DTO for invitation request

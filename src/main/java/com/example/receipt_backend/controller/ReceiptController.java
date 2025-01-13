@@ -43,10 +43,10 @@ public class ReceiptController {
         return ResponseEntity.ok(receiptDTO);
     }
     @PutMapping
-    public ResponseEntity<GenericResponseDTO<Boolean>> updateReceipts(@RequestBody List<UpdateReceiptDto> dto){
+    public ResponseEntity<GenericResponseDTO<String>> updateReceipts(@RequestBody List<UpdateReceiptDto> dto){
         receiptService.updateReceiptsForApproval(dto);
 
-        return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(true).messageCode("Updated successfully").build(), HttpStatus.OK);
+        return new ResponseEntity<>(GenericResponseDTO.<String>builder().response("Updated successfully").build(), HttpStatus.OK);
     }
 
 //    @PatchMapping("/{receiptId}/ocr")
@@ -66,16 +66,9 @@ public class ReceiptController {
 
     @DeleteMapping("/bulk-delete")
     public ResponseEntity<GenericResponseDTO<Boolean>> deleteReceipts(@RequestBody List<UUID> receiptIds) {
-        try {
             receiptService.deleteReceipts(receiptIds);
             return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(true).build(), HttpStatus.OK);
-        } catch (ResourceNotFoundException e) {
-            // If any of the receipts are not found
-            return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(false).messageCode(e.getMessage()).build(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            // For any other errors
-            return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(false).messageCode("Failed to delete receipts.").build(), HttpStatus.BAD_REQUEST);
-        }
+
     }
 
 }

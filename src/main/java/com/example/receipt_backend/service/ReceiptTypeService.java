@@ -24,7 +24,7 @@ public interface ReceiptTypeService {
     List<Map<String, Object>> getAllReceiptTypes();
 
     @Transactional
-    ReceiptTypeResponseDTO updateReceiptType(String receiptTypeId, ReceiptTypeUpdateRequestDTO requestDTO) throws IOException;
+    ReceiptTypeResponseDTO updateReceiptType(String receiptTypeId, ReceiptTypeRequestDTO requestDTO) throws IOException;
 
     @Transactional(readOnly = true)
     List<ReceiptTypeResponseDTO> getAllReceiptTypesWithJson();

@@ -13,6 +13,4 @@ import lombok.NoArgsConstructor;
 public class GenericResponseDTO<T> {
 
     private T response;
-
-    private String messageCode;
 }

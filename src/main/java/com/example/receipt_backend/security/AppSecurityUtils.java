@@ -4,8 +4,8 @@ import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierRes
 import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.entity.common.AbstractGenericPrimaryKey;
-import com.example.receipt_backend.exception.AppExceptionConstants;
 import com.example.receipt_backend.exception.BadRequestException;
+import com.example.receipt_backend.exception.ErrorCode;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.repository.TenantRepository;
 import com.example.receipt_backend.repository.UserRepository;
@@ -114,6 +114,6 @@ public class AppSecurityUtils {
 
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new ResourceNotFoundException(AppExceptionConstants.USER_RECORD_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_RECORD_NOT_FOUND.getMessage()));
     }
 }

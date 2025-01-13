@@ -44,4 +44,6 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     boolean existsByRole_Name(RoleType roleType);
 
     boolean existsByEmailAndTenant_TenantName(String adminEmail, String tenantName);
+
+    Optional<User> findByUsernameAndTenant_TenantId(String username, UUID tenant_tenantId);
 }

@@ -17,7 +17,6 @@ import java.util.UUID;
 public abstract class AbstractGenericPrimaryKey {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private UUID id;
 

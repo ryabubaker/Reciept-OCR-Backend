@@ -1,6 +1,7 @@
 package com.example.receipt_backend.controller;
 
 import com.example.receipt_backend.dto.UserDTO;
+import com.example.receipt_backend.dto.request.DeleteUsersRequest;
 import com.example.receipt_backend.dto.request.RegisterUserByAdminDto;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
@@ -27,7 +28,6 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("users")
-@PreAuthorize("isAuthenticated()")
 @RequiredArgsConstructor
 @Tag(name = "User Management", description = "APIs for managing users")
 public class UserController {
@@ -38,7 +38,6 @@ public class UserController {
     @PostMapping("admin-create")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Create a new user by tenant admin", description = "Create a new user with the specified details")
-
     public ResponseEntity<GenericResponseDTO<Boolean>> createUserByAdmin(@RequestBody RegisterUserByAdminDto userDTO) {
         return userService.createUserByAdmin(userDTO);
     }
@@ -71,16 +70,9 @@ public class UserController {
     @Operation(summary = "Update user", description = "Update an existing user's details")
     public ResponseEntity<GenericResponseDTO<Boolean>> updateUser(@PathVariable UUID id,
                                                                   @RequestBody UserDTO userDTO) {
-        log.info("User API: updateEntity user");
-        try {
             userService.updateUser(id, userDTO);
             GenericResponseDTO<Boolean> build = GenericResponseDTO.<Boolean>builder().response(true).build();
             return new ResponseEntity<>(build, HttpStatus.OK);
-        } catch (Exception e) {
-            log.error("Failed to update user: {}", e.getMessage(), e);
-            GenericResponseDTO<Boolean> build = GenericResponseDTO.<Boolean>builder().response(false).build();
-            return new ResponseEntity<>(build, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     @PutMapping("/update-password")
@@ -110,16 +102,9 @@ public class UserController {
 @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
 @Operation(summary = "Bulk Delete Users", description = "Deletes multiple users by their IDs")
 public ResponseEntity<GenericResponseDTO<Boolean>> deleteUsers(@RequestBody List<UUID> userIds) {
-    try {
         userService.deleteUsers(userIds);
         return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(true).build(), HttpStatus.OK);
-    } catch (ResourceNotFoundException e) {
-        // If any of the users are not found
-        return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(false).messageCode(e.getMessage()).build(), HttpStatus.NOT_FOUND);
-    } catch (Exception e) {
-        // For any other errors
-        return new ResponseEntity<>(GenericResponseDTO.<Boolean>builder().response(false).messageCode("Failed to delete users.").build(), HttpStatus.BAD_REQUEST);
-    }
+
 }
 
 

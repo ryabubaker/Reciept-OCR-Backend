@@ -37,10 +37,9 @@ public class AuthenticationController {
 //    }
 
     @PostMapping("/register")
-    public ResponseEntity<GenericResponseDTO<Boolean>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        GenericResponseDTO<Boolean> response = authService.registerUserWithInvitation(registerRequest);
-        HttpStatus status = response.getResponse() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
-        return new ResponseEntity<>(response, status);
+    public ResponseEntity<GenericResponseDTO<String>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        GenericResponseDTO<String> response = authService.registerUserWithInvitation(registerRequest);
+        return  ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh-token")

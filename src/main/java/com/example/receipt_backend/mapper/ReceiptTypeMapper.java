@@ -18,8 +18,10 @@ public interface ReceiptTypeMapper {
 
     @Mapping(target = "receiptTypeId", source = "receiptTypeId")
     @Mapping(target = "template", ignore = true)
-    @Mapping(target = "column2idxMap", source = "column2idxMap")
+    @Mapping(target = "column2idxMap", ignore = true)
     ReceiptTypeResponseDTO toResponseDTO(ReceiptType receiptType);
+
+
 
    
 }

@@ -84,7 +84,7 @@ aws:
   secret: ${AWS_SECRET_ACCESS_KEY}
   s3:
     bucket: receipt-bucket-gp
-    region: ${AWS_REGION}
+    region: us-east-2
 
 # logging config
 logging:
@@ -102,7 +102,11 @@ logging:
       springframework:
         web: DEBUG
         security: DEBUG
+  file:
+    name: /var/log/eb-docker/receipt-backend.log
+
 # App Custom Properties
+
 myapp:
 
   appName: spring security OAuth2 and JWT starter example

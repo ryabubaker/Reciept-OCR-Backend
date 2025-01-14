@@ -71,6 +71,10 @@ jobs:
         run: pipx install awsebcli
         shell: bash
 
+      - name: Update PATH for EB CLI
+        run: echo "${{ runner.os == 'Linux' && 'PATH=/opt/pipx_bin:~/.local/bin:' || '' }}$PATH" >> $GITHUB_ENV
+        shell: bash
+
       - name: Deploy to Elastic Beanstalk
         run: |
           # Initialize EB CLI if not already initialized
@@ -80,6 +84,4 @@ jobs:
 
           # Deploy the application
           eb deploy ${{ secrets.EB_ENV_NAME }} --staged
-        env:
-          PATH: ${{ env.PATH }}:~/.local/bin
         shell: bash

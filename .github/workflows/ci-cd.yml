@@ -1,4 +1,5 @@
 name: CI/CD Pipeline
+
 on:
   push:
     branches:
@@ -6,6 +7,7 @@ on:
   pull_request:
     branches:
       - master
+
 jobs:
   # ---- Build and Dockerize Job ----
   build-and-dockerize:
@@ -44,18 +46,30 @@ jobs:
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   # ---- Deploy Job ----
-  deploy-to-koyeb:
+  deploy-to-aws:
     needs: build-and-dockerize
     runs-on: ubuntu-latest
     steps:
-      - name: Install and configure the Koyeb CLI
-        uses: koyeb-community/koyeb-actions@v2
-        with:
-          api_token: "${{ secrets.KOYEB_API_TOKEN }}"
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Deploy to Koyeb
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to Elastic Beanstalk
         run: |
-          koyeb service redeploy ${KOYEB_APP_NAME}/${KOYEB_SERVICE_NAME}
-        env:
-          KOYEB_APP_NAME: ${{ secrets.KOYEB_APP_NAME }}
-          KOYEB_SERVICE_NAME: ${{ secrets.KOYEB_SERVICE_NAME }}
+          # Install EB CLI
+          sudo pip install awsebcli
+
+          # Initialize EB CLI repository (only if not already initialized)
+          if [ ! -d ".elasticbeanstalk" ]; then
+            eb init ${{ secrets.EB_APP_NAME }} --platform docker --region ${{ secrets.AWS_REGION }}
+          fi
+
+          # Create a new application version with Dockerrun.aws.json
+          eb deploy ${{ secrets.EB_ENV_NAME }} --staged
+        

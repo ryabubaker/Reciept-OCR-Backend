@@ -1,16 +1,12 @@
 {
-  "AWSEBDockerrunVersion": "2",
-  "containerDefinitions": [
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "ryabubaker/receipt-backend:latest",
+    "Update": "true"
+  },
+  "Ports": [
     {
-      "name": "receipt-backend",
-      "image": "ryabubaker/receipt-backend:latest",
-      "essential": true,
-      "memory": 512,
-      "portMappings": [
-        {
-          "containerPort": 8080
-        }
-      ]
+      "ContainerPort": "8080"
     }
   ]
 }

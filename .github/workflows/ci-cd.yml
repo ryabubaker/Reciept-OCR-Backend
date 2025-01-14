@@ -60,16 +60,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Install pipx
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --user pipx
+          python3 -m pipx ensurepath
+        shell: bash
+
+      - name: Install awsebcli using pipx
+        run: pipx install awsebcli
+        shell: bash
+
       - name: Deploy to Elastic Beanstalk
         run: |
-          # Install EB CLI
-          sudo pip install awsebcli
-
-          # Initialize EB CLI repository (only if not already initialized)
+          # Initialize EB CLI if not already initialized
           if [ ! -d ".elasticbeanstalk" ]; then
             eb init ${{ secrets.EB_APP_NAME }} --platform docker --region ${{ secrets.AWS_REGION }}
           fi
 
-          # Create a new application version with Dockerrun.aws.json
+          # Deploy the application
           eb deploy ${{ secrets.EB_ENV_NAME }} --staged
-        
+        env:
+          PATH: ${{ env.PATH }}:~/.local/bin
+        shell: bash

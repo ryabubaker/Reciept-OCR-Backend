@@ -233,15 +233,13 @@ public class UserServiceImpl implements UserService {
             throw new CustomAppException(ErrorCode.PASSWORD_EMPTY);
         }
 
-        // Hash the password before storing
-        String hashedPassword = passwordEncoder.encode(providedPassword);
         // Build UserDTO with the correct tenantId
         UserDTO adminUserDto = UserDTO.builder()
                 .id(UUID.fromString(request.getUserId()))
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .emailVerified(true)
-                .password(hashedPassword)
+                .password(providedPassword)
                 .registeredProviderName(SecurityEnums.AuthProviderId.local)
                 .role(request.getRoleType())
                 .tenantId(tenantId) // Use tenantId from the saved tenant

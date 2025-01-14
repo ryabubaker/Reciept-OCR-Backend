@@ -103,7 +103,7 @@ jobs:
           application_name: ${{ secrets.EB_APP_NAME }}
           environment_name: ${{ secrets.EB_ENV_NAME }}
           version_label: "${{ env.VERSION_LABEL }}"
-          region: eu-north-1
+          region: us-east-2
           deployment_package: Dockerrun.aws.json
 
       - name: Use Existing Version If Available

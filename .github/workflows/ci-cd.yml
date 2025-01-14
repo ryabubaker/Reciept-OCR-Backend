@@ -64,6 +64,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       # Set Elastic Beanstalk Environment Properties
+      # Set Elastic Beanstalk Environment Properties
       - name: Set Elastic Beanstalk Environment Properties
         run: |
           aws elasticbeanstalk update-environment \
@@ -81,7 +82,10 @@ jobs:
               Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_CLIENT_SECRET,Value="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_REDIRECT_URI,Value="${{ secrets.GOOGLE_REDIRECT_URI }}" \
               Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_SECRET_KEY,Value="${{ secrets.JWT_SECRET_KEY }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_EXPIRATION,Value="${{ secrets.JWT_EXPIRATION }}"
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_EXPIRATION,Value="${{ secrets.JWT_EXPIRATION }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_ACCESS_KEY_ID,Value="${{ secrets.AWS_ACCESS_KEY_ID }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_SECRET_ACCESS_KEY,Value="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_REGION,Value="${{ secrets.AWS_REGION }}"
 
       # Deploy to Elastic Beanstalk using beanstalk-deploy action
       - name: Deploy to Elastic Beanstalk

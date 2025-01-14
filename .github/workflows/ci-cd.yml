@@ -51,11 +51,9 @@ jobs:
     needs: build-and-dockerize
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -63,8 +61,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Set Elastic Beanstalk Environment Properties
-      # Set Elastic Beanstalk Environment Properties
+      - name: Generate Version Label
+        id: version
+        run: echo "VERSION_LABEL=build-${{ github.run_number }}-${{ github.run_id }}-${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Check if Version Exists
+        id: check_version
+        run: |
+          VERSION_LABEL=${{ env.VERSION_LABEL }}
+          VERSION_EXISTS=$(aws elasticbeanstalk describe-application-versions --application-name "${{ secrets.EB_APP_NAME }}" --version-labels "$VERSION_LABEL" --query "ApplicationVersions[?VersionLabel=='$VERSION_LABEL'].VersionLabel" --output text)
+          echo "VERSION_EXISTS=${VERSION_EXISTS}" >> $GITHUB_ENV
+
       - name: Set Elastic Beanstalk Environment Properties
         run: |
           aws elasticbeanstalk update-environment \
@@ -87,14 +94,18 @@ jobs:
               Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_SECRET_ACCESS_KEY,Value="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
               Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_REGION,Value="${{ secrets.AWS_REGION }}"
 
-      # Deploy to Elastic Beanstalk using beanstalk-deploy action
       - name: Deploy to Elastic Beanstalk
+        if: env.VERSION_EXISTS != env.VERSION_LABEL
         uses: einaregilsson/beanstalk-deploy@v14
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: ${{ secrets.EB_APP_NAME }}
           environment_name: ${{ secrets.EB_ENV_NAME }}
-          version_label: "build-${{ github.run_number }}-${{ github.sha }}"
+          version_label: "${{ env.VERSION_LABEL }}"
           region: ${{ secrets.AWS_REGION }}
           deployment_package: Dockerrun.aws.json
+
+      - name: Use Existing Version If Available
+        if: env.VERSION_EXISTS == env.VERSION_LABEL
+        run: echo "Version already exists. Skipping deployment."

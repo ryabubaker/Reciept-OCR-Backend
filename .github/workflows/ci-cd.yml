@@ -45,13 +45,16 @@ jobs:
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   # ---- Deploy Job ----
-  deploy-to-aws:
-    needs: build-and-dockerize
+  deploy-to-elastic-beanstalk:
+    name: Deploy to Elastic Beanstalk
+    needs: build-and-push-image
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -59,22 +62,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Install AWS Elastic Beanstalk CLI
-        run: |
-          pip install --upgrade --user awsebcli
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-        shell: bash
-
-      - name: Initialize Elastic Beanstalk Application
-        run: |
-          if [ ! -d ".elasticbeanstalk" ]; then
-            eb init "${{ secrets.EB_APP_NAME }}" \
-              --platform "Docker running on 64bit Amazon Linux 2" \
-              --region "${{ secrets.AWS_REGION }}"
-          fi
-        shell: bash
-
+      # Deploy to Elastic Beanstalk using beanstalk-deploy action
       - name: Deploy to Elastic Beanstalk
-        run: |
-          eb deploy "${{ secrets.EB_ENV_NAME }}" --staged
-        shell: bash
+        uses: einaregilsson/beanstalk-deploy@v14
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ secrets.EB_APPLICATION_NAME }}
+          environment_name: ${{ secrets.EB_ENVIRONMENT_NAME }}
+          version_label: "build-${{ github.run_number }}-${{ github.sha }}"
+          region: ${{ secrets.AWS_REGION }}
+          deployment_package: Dockerrun.aws.json

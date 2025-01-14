@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8080}
+  port: 5000
   tomcat:
     max-swallow-size: -1
   forward-headers-strategy: framework

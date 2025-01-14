@@ -29,6 +29,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-m2-
+
       - name: Build and compile
         run: mvn clean compile --no-transfer-progress -DskipTests
 
@@ -62,23 +63,25 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # Set Elastic Beanstalk Environment Properties
       - name: Set Elastic Beanstalk Environment Properties
         run: |
           aws elasticbeanstalk update-environment \
-            --application-name ${{ secrets.EB_APP_NAME }} \
-            --environment-name ${{ secrets.EB_ENV_NAME }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_URL,Value=${{ secrets.SPRING_DATASOURCE_URL }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_USERNAME,Value=${{ secrets.SPRING_DATASOURCE_USERNAME }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_PASSWORD,Value=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_HOST,Value=${{ secrets.MAIL_HOST }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_USERNAME,Value=${{ secrets.MAIL_USERNAME }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_PASSWORD,Value=${{ secrets.MAIL_PASSWORD }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_PORT,Value=${{ secrets.MAIL_PORT }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_CLIENT_ID,Value=${{ secrets.GOOGLE_CLIENT_ID }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_CLIENT_SECRET,Value=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_REDIRECT_URI,Value=${{ secrets.GOOGLE_REDIRECT_URI }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_SECRET_KEY,Value=${{ secrets.JWT_SECRET_KEY }} \
-            --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_EXPIRATION,Value=${{ secrets.JWT_EXPIRATION }}
+            --application-name "${{ secrets.EB_APP_NAME }}" \
+            --environment-name "${{ secrets.EB_ENV_NAME }}" \
+            --option-settings \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_URL,Value="${{ secrets.SPRING_DATASOURCE_URL }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_USERNAME,Value="${{ secrets.SPRING_DATASOURCE_USERNAME }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_PASSWORD,Value="${{ secrets.SPRING_DATASOURCE_PASSWORD }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_HOST,Value="${{ secrets.MAIL_HOST }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_USERNAME,Value="${{ secrets.MAIL_USERNAME }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_PASSWORD,Value="${{ secrets.MAIL_PASSWORD }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_PORT,Value="${{ secrets.MAIL_PORT }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_CLIENT_ID,Value="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_CLIENT_SECRET,Value="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_REDIRECT_URI,Value="${{ secrets.GOOGLE_REDIRECT_URI }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_SECRET_KEY,Value="${{ secrets.JWT_SECRET_KEY }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_EXPIRATION,Value="${{ secrets.JWT_EXPIRATION }}"
 
       # Deploy to Elastic Beanstalk using beanstalk-deploy action
       - name: Deploy to Elastic Beanstalk

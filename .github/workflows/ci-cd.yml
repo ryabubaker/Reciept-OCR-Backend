@@ -61,6 +61,27 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Wait for Elastic Beanstalk Environment to Be Ready
+        run: |
+          echo "Waiting for Elastic Beanstalk environment to be in 'Ready' state..."
+          for i in {1..30}; do
+            STATUS=$(aws elasticbeanstalk describe-environments \
+              --application-name "${{ secrets.EB_APP_NAME }}" \
+              --environment-name "${{ secrets.EB_ENV_NAME }}" \
+              --region "${{ secrets.AWS_REGION }}" \
+              --query "Environments[0].Status" --output text)
+            echo "Current status: $STATUS"
+            if [ "$STATUS" == "Ready" ]; then
+              echo "Environment is ready!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Environment did not become ready within the timeout period."
+              exit 1
+            fi
+            sleep 60
+          done
+
       - name: Generate Version Label
         id: version
         run: echo "VERSION_LABEL=build-${{ github.run_number }}-${{ github.run_id }}-${{ github.sha }}" >> $GITHUB_ENV
@@ -72,28 +93,6 @@ jobs:
           VERSION_EXISTS=$(aws elasticbeanstalk describe-application-versions --application-name "${{ secrets.EB_APP_NAME }}" --version-labels "$VERSION_LABEL" --query "ApplicationVersions[?VersionLabel=='$VERSION_LABEL'].VersionLabel" --output text)
           echo "VERSION_EXISTS=${VERSION_EXISTS}" >> $GITHUB_ENV
 
-      - name: Set Elastic Beanstalk Environment Properties
-        run: |
-          aws elasticbeanstalk update-environment \
-            --application-name "${{ secrets.EB_APP_NAME }}" \
-            --environment-name "Invizo-app-env" \
-            --option-settings \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_URL,Value="${{ secrets.SPRING_DATASOURCE_URL }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_USERNAME,Value="${{ secrets.SPRING_DATASOURCE_USERNAME }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SPRING_DATASOURCE_PASSWORD,Value="${{ secrets.SPRING_DATASOURCE_PASSWORD }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_HOST,Value="${{ secrets.MAIL_HOST }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_USERNAME,Value="${{ secrets.MAIL_USERNAME }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_PASSWORD,Value="${{ secrets.MAIL_PASSWORD }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MAIL_PORT,Value="${{ secrets.MAIL_PORT }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_CLIENT_ID,Value="${{ secrets.GOOGLE_CLIENT_ID }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_CLIENT_SECRET,Value="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=GOOGLE_REDIRECT_URI,Value="${{ secrets.GOOGLE_REDIRECT_URI }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_SECRET_KEY,Value="${{ secrets.JWT_SECRET_KEY }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_EXPIRATION,Value="${{ secrets.JWT_EXPIRATION }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_ACCESS_KEY_ID,Value="${{ secrets.AWS_ACCESS_KEY_ID }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_SECRET_ACCESS_KEY,Value="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_REGION,Value="${{ secrets.AWS_REGION }}"
-
       - name: Deploy to Elastic Beanstalk
         if: env.VERSION_EXISTS != env.VERSION_LABEL
         uses: einaregilsson/beanstalk-deploy@v22
@@ -103,6 +102,6 @@ jobs:
           application_name: ${{ secrets.EB_APP_NAME }}
           environment_name: ${{ secrets.EB_ENV_NAME }}
           version_label: "${{ env.VERSION_LABEL }}"
-          region: us-east-2
+          region: ${{ secrets.AWS_REGION }}
           deployment_package: Dockerrun.aws.json
 

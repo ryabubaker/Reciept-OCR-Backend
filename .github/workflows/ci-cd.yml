@@ -30,17 +30,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      - name: Build and compile
-        run: mvn clean compile --no-transfer-progress -DskipTests
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
       - name: Build and Push Docker image with Jib
-        run: mvn jib:build
+        run: mvn clean compile jib:build
         env:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
@@ -60,28 +51,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Install pipx
+      - name: Install AWS Elastic Beanstalk CLI
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install --user pipx
-          python3 -m pipx ensurepath
+          pip install --upgrade --user awsebcli
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
         shell: bash
 
-      - name: Install awsebcli using pipx
-        run: pipx install awsebcli
-        shell: bash
-
-      - name: Update PATH for EB CLI
-        run: echo "${{ runner.os == 'Linux' && 'PATH=/opt/pipx_bin:~/.local/bin:' || '' }}$PATH" >> $GITHUB_ENV
+      - name: Initialize Elastic Beanstalk Application
+        run: |
+          if [ ! -d ".elasticbeanstalk" ]; then
+            eb init "${{ secrets.EB_APP_NAME }}" \
+              --platform "Docker running on 64bit Amazon Linux 2" \
+              --region "${{ secrets.AWS_REGION }}"
+          fi
         shell: bash
 
       - name: Deploy to Elastic Beanstalk
         run: |
-          # Initialize EB CLI if not already initialized
-          if [ ! -d ".elasticbeanstalk" ]; then
-            eb init ${{ secrets.EB_APP_NAME }} --platform docker --region ${{ secrets.AWS_REGION }}
-          fi
-
-          # Deploy the application
-          eb deploy ${{ secrets.EB_ENV_NAME }} --staged
+          eb deploy "${{ secrets.EB_ENV_NAME }}" --staged
         shell: bash

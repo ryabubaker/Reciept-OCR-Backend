@@ -8,60 +8,6 @@
     {
       "ContainerPort": "8080"
     }
-  ],
-  "environment": [
-    {
-      "name": "PORT",
-      "value": "8080"
-    },
-    {
-      "name": "SPRING_DATASOURCE_URL",
-      "value": "${{ secrets.SPRING_DATASOURCE_URL }}"
-    },
-    {
-      "name": "SPRING_DATASOURCE_USERNAME",
-      "value": "${{ secrets.SPRING_DATASOURCE_USERNAME }}"
-    },
-    {
-      "name": "SPRING_DATASOURCE_PASSWORD",
-      "value": "${{ secrets.SPRING_DATASOURCE_PASSWORD }}"
-    },
-    {
-      "name": "MAIL_HOST",
-      "value": "${{ secrets.MAIL_HOST }}"
-    },
-    {
-      "name": "MAIL_USERNAME",
-      "value": "${{ secrets.MAIL_USERNAME }}"
-    },
-    {
-      "name": "MAIL_PASSWORD",
-      "value": "${{ secrets.MAIL_PASSWORD }}"
-    },
-    {
-      "name": "MAIL_PORT",
-      "value": "${{ secrets.MAIL_PORT }}"
-    },
-    {
-      "name": "GOOGLE_CLIENT_ID",
-      "value": "${{ secrets.GOOGLE_CLIENT_ID }}"
-    },
-    {
-      "name": "GOOGLE_CLIENT_SECRET",
-      "value": "${{ secrets.GOOGLE_CLIENT_SECRET }}"
-    },
-    {
-      "name": "GOOGLE_REDIRECT_URI",
-      "value": "${{ secrets.GOOGLE_REDIRECT_URI }}"
-    },
-    {
-      "name": "JWT_SECRET_KEY",
-      "value": "${{ secrets.JWT_SECRET_KEY }}"
-    },
-    {
-      "name": "JWT_EXPIRATION",
-      "value": "${{ secrets.JWT_EXPIRATION }}"
-    }
   ]
 }
 

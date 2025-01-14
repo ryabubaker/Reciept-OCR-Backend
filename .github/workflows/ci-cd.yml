@@ -96,7 +96,7 @@ jobs:
 
       - name: Deploy to Elastic Beanstalk
         if: env.VERSION_EXISTS != env.VERSION_LABEL
-        uses: einaregilsson/beanstalk-deploy@v14
+        uses: einaregilsson/beanstalk-deploy@v22
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -106,6 +106,3 @@ jobs:
           region: us-east-2
           deployment_package: Dockerrun.aws.json
 
-      - name: Use Existing Version If Available
-        if: env.VERSION_EXISTS == env.VERSION_LABEL
-        run: echo "Version already exists. Skipping deployment."

@@ -124,12 +124,28 @@ public class UserServiceImpl implements UserService {
     public UserDTO updateUser(UUID id, UserDTO reqUserDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_RECORD_NOT_FOUND));
-        reqUserDTO.setPassword(passwordEncoder.encode(reqUserDTO.getPassword()));
+        String newPassword = reqUserDTO.getPassword();
+        boolean isPasswordUpdated = false;
+
+        // Check if the new password is different from the current password
+        if (!passwordEncoder.matches(newPassword, user.getPassword())) {
+            reqUserDTO.setPassword(passwordEncoder.encode(newPassword));
+            isPasswordUpdated = true;
+        } else {
+            reqUserDTO.setPassword(user.getPassword()); // Keep the existing password
+        }
+
         reqUserDTO.setEmailVerified(true);
         reqUserDTO.setRegisteredProviderName(SecurityEnums.AuthProviderId.local);
-
+    
         userMapper.updateEntity(reqUserDTO, user);
         userRepository.save(user);
+
+        // Send email with new password only if the password was updated
+        if (isPasswordUpdated && userRepository.existsById(user.getId())) {
+            emailService.sendWelcomeEmailWithPassword(user.getEmail(), user.getUsername(), newPassword);
+        }
+    
         return userMapper.toDto(user);
     }
 

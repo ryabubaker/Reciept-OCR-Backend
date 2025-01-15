@@ -1,5 +1,6 @@
 package com.example.receipt_backend.service.impl;
 
+import com.example.receipt_backend.config.AppProperties;
 import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.dto.UserDTO;
 import com.example.receipt_backend.dto.request.*;
@@ -9,13 +10,12 @@ import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.exception.CustomAppException;
 import com.example.receipt_backend.exception.ErrorCode;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
+import com.example.receipt_backend.mail.EmailService;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.repository.TenantRepository;
 import com.example.receipt_backend.repository.UserRepository;
 import com.example.receipt_backend.security.SecurityEnums;
 import com.example.receipt_backend.service.UserService;
-import com.example.receipt_backend.mail.EmailService;
-import com.example.receipt_backend.config.AppProperties;
 import com.example.receipt_backend.utils.AppUtils;
 import com.example.receipt_backend.utils.RoleType;
 import lombok.AllArgsConstructor;
@@ -31,8 +31,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 
 import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -122,6 +124,9 @@ public class UserServiceImpl implements UserService {
     public UserDTO updateUser(UUID id, UserDTO reqUserDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_RECORD_NOT_FOUND));
+        reqUserDTO.setPassword(passwordEncoder.encode(reqUserDTO.getPassword()));
+        reqUserDTO.setEmailVerified(true);
+        reqUserDTO.setRegisteredProviderName(SecurityEnums.AuthProviderId.local);
 
         userMapper.updateEntity(reqUserDTO, user);
         userRepository.save(user);

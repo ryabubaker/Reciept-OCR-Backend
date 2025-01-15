@@ -1,12 +1,10 @@
 package com.example.receipt_backend.controller;
 
 import com.example.receipt_backend.dto.UserDTO;
-import com.example.receipt_backend.dto.request.DeleteUsersRequest;
 import com.example.receipt_backend.dto.request.RegisterUserByAdminDto;
 import com.example.receipt_backend.dto.request.UpdatePasswordRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.entity.User;
-import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.UserMapper;
 import com.example.receipt_backend.security.AppSecurityUtils;
 import com.example.receipt_backend.service.UserService;
@@ -27,7 +25,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("users")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 @Tag(name = "User Management", description = "APIs for managing users")
 public class UserController {
@@ -35,7 +33,7 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
 
-    @PostMapping("admin-create")
+    @PostMapping("/admin-create")
     @PreAuthorize("hasRole('ROLE_COMPANY_ADMIN')")
     @Operation(summary = "Create a new user by tenant admin", description = "Create a new user with the specified details")
     public ResponseEntity<GenericResponseDTO<Boolean>> createUserByAdmin(@RequestBody RegisterUserByAdminDto userDTO) {
@@ -52,7 +50,7 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Retrieve a user's details by their ID")
     public ResponseEntity<UserDTO> getUserById(@PathVariable UUID id) {
-        log.info("User API: get user by id: ", id);
+        log.info("User API: get user by id: {} ", id);
         UserDTO userDTO = userService.getUserById(id);
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
@@ -87,9 +85,14 @@ public class UserController {
     @Operation(summary = "Get authenticated user", description = "Retrieve details of the currently authenticated user")
     public ResponseEntity<UserDTO> retrieveAuthenticatedUser() {
         Optional<UUID> currentUserId = AppSecurityUtils.getCurrentUserId();
-        log.info("User API: retrieve authenticated user details for userId: ", currentUserId.get());
-        UserDTO genericResponse = userService.getUserById(currentUserId.get());
-        return new ResponseEntity<>(genericResponse, HttpStatus.OK);
+        if (currentUserId.isPresent()) {
+            log.info("User API: retrieve authenticated user details for userId: {}", currentUserId.get());
+            UserDTO genericResponse = userService.getUserById(currentUserId.get());
+            return new ResponseEntity<>(genericResponse, HttpStatus.OK);
+        } else {
+            log.warn("User API: No authenticated user found");
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/email-exists")

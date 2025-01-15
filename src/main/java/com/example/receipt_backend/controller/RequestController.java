@@ -1,6 +1,5 @@
 package com.example.receipt_backend.controller;
 
-import com.example.receipt_backend.dto.UpdateReceiptDto;
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
@@ -23,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("request")
+@RequestMapping("/request")
 @RequiredArgsConstructor
 @Tag(name = "Request Controller", description = "APIs for managing receipt requests")
 public class RequestController {

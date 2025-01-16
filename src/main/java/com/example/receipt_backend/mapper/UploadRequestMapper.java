@@ -19,6 +19,8 @@ public interface UploadRequestMapper {
 
     @Mapping(target = "receipts", source = "receipts", qualifiedByName = "mapReceiptsToDTOs")
     @Mapping(target = "uploadedAt", source = "uploadedAt")
+    @Mapping(target = "uploadedBy", source = "uploadedBy.id")
+    @Mapping(target = "status", source = "status")
     UploadResponseDTO toResponseDTO(UploadRequest uploadRequest);
 
 }

@@ -223,6 +223,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
+    @Transactional
     public List<UploadResponseDTO> getRequestsAfterDate(LocalDateTime dateTime) {
         return uploadRequestRepository.findAllByUploadedAtAfter(dateTime)
                 .stream()

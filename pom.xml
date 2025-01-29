@@ -242,7 +242,17 @@
                         <port>8000</port>
                     </ports>
                     <mainClass>com.example.receipt_backend.ReceiptBackendApplication</mainClass>
-                </container>
+                    <extraDirectories>
+                        <paths>
+                            <path>.platform</path>
+                        </paths>
+                        <permissions>
+                            <permission>
+                                <file>.platform/nginx/conf.d/proxy.conf</file>
+                            </permission>
+                        </permissions>
+                    </extraDirectories>
+                    </container>
                 </configuration>
             </plugin>
         </plugins>

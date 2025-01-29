@@ -95,15 +95,34 @@ jobs:
           VERSION_EXISTS=$(aws elasticbeanstalk describe-application-versions --application-name "${{ secrets.EB_APP_NAME }}" --version-labels "$VERSION_LABEL" --query "ApplicationVersions[?VersionLabel=='$VERSION_LABEL'].VersionLabel" --output text)
           echo "VERSION_EXISTS=${VERSION_EXISTS}" >> $GITHUB_ENV
 
+      - name: Prepare Deployment Package
+        if: env.VERSION_EXISTS != env.VERSION_LABEL
+        run: |
+          mkdir deployment_package
+          cp Dockerrun.aws.json deployment_package/
+          cp -r .platform deployment_package/
+          cd deployment_package
+          zip -r ../deployment-package.zip .
+          cd ..
+
+      - name: Upload Deployment Package to S3
+        if: env.VERSION_EXISTS != env.VERSION_LABEL
+        run: |
+          aws s3 cp deployment-package.zip s3://${{ secrets.AWS_S3_BUCKET }}/deployment-package.zip
+
+      - name: Create Application Version in Elastic Beanstalk
+        if: env.VERSION_EXISTS != env.VERSION_LABEL
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "${{ secrets.EB_APP_NAME }}" \
+            --version-label "${{ env.VERSION_LABEL }}" \
+            --source-bundle S3Bucket="${{ secrets.AWS_S3_BUCKET }}",S3Key="deployment-package.zip" \
+            --auto-create-application
+
       - name: Deploy to Elastic Beanstalk
         if: env.VERSION_EXISTS != env.VERSION_LABEL
-        uses: einaregilsson/beanstalk-deploy@v22
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: ${{ secrets.EB_APP_NAME }}
-          environment_name: ${{ secrets.EB_ENV_NAME }}
-          version_label: "${{ env.VERSION_LABEL }}"
-          region: ${{ secrets.AWS_REGION }}
-          deployment_package: Dockerrun.aws.json
-
+        run: |
+          aws elasticbeanstalk update-environment \
+            --application-name "${{ secrets.EB_APP_NAME }}" \
+            --environment-name "${{ secrets.EB_ENV_NAME }}" \
+            --version-label "${{ env.VERSION_LABEL }}"

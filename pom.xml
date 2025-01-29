@@ -216,7 +216,6 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
@@ -243,11 +242,6 @@
                     </ports>
                     <mainClass>com.example.receipt_backend.ReceiptBackendApplication</mainClass>
                     </container>
-                    <extraDirectories>
-                        <paths>
-                            <path>.platform</path>
-                        </paths>
-                    </extraDirectories>
                 </configuration>
             </plugin>
         </plugins>

@@ -4,9 +4,10 @@
     "Name": "ryabubaker/receipt-backend:latest",
     "Update": "true"
   },
-  "Ports": [
+  "Ports":[
     {
-      "ContainerPort": "8080"
+      "ContainerPort":8080,
+      "HostPort":8080
     }
   ]
 }

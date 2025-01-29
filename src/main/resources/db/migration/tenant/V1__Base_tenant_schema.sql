@@ -16,6 +16,7 @@ CREATE TABLE receipt_type (
 );
 
 CREATE TABLE receipt_type_fields (
+
                                      receipt_type_id UUID NOT NULL,
                                      column_name VARCHAR(255) NOT NULL,
                                      column_index INTEGER,

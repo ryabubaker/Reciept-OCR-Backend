@@ -247,12 +247,6 @@
                         <paths>
                             <path>.platform</path>
                         </paths>
-                        <permissions>
-                            <permission>
-                                <file>.platform/nginx/conf.d/proxy.conf</file>
-                                <mode>755</mode>
-                            </permission>
-                        </permissions>
                     </extraDirectories>
                 </configuration>
             </plugin>

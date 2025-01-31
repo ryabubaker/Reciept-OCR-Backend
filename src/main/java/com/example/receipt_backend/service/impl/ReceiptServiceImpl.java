@@ -214,7 +214,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
             // Update the receipt's status and OCR data
             User user = getCurrentUser();
-            receipt.setStatus(updateReceiptDto.getStatus());
+            receipt.setStatus(ReceiptStatus.valueOf(updateReceiptDto.getStatus()));
             receipt.setOcrData(updateReceiptDto.getOcrData());
             receipt.setApprovedBy(user);
             receipt.setApprovedAt(updateReceiptDto.getApprovedAt().toLocalDateTime());
@@ -234,13 +234,13 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Override
-    public void updateRequestStatus(String requestId, RequestStatus status) {
+    public void updateRequestStatus(String requestId, String status) {
         UploadRequest request = uploadRequestRepository.findById(UUID.fromString(requestId))
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ErrorCode.REQUEST_NOT_FOUND
                 ));
 
-        request.setStatus(status);
+        request.setStatus(RequestStatus.valueOf(status));
         uploadRequestRepository.save(request);
     }
 

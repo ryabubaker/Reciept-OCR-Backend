@@ -10,7 +10,7 @@ import java.util.HashMap;
 @Data
 public class UpdateReceiptDto {
     private String receiptId;
-    private ReceiptStatus status;
+    private String status;
     private HashMap<Integer, String> ocrData;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
     private Timestamp approvedAt;

@@ -5,7 +5,6 @@ import com.example.receipt_backend.dto.UpdateReceiptDto;
 import com.example.receipt_backend.dto.request.UploadRequestDTO;
 import com.example.receipt_backend.dto.response.GenericResponseDTO;
 import com.example.receipt_backend.dto.response.UploadResponseDTO;
-import com.example.receipt_backend.utils.RequestStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +30,7 @@ public interface ReceiptService {
 //    @Transactional
 //    ReceiptDTO updateOcrData(UUID receiptId, Map<String, String> updatedOcrData);
 
-    void updateRequestStatus(String requestId, RequestStatus status);
+    void updateRequestStatus(String requestId, String status);
 
     Page<UploadResponseDTO> getPendingRequests(Pageable pageable);
 

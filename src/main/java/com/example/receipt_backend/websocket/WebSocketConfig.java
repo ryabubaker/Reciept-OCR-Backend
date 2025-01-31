@@ -1,4 +1,4 @@
-package com.example.receipt_backend.config;
+package com.example.receipt_backend.websocket;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

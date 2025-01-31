@@ -63,7 +63,7 @@ public ResponseEntity<List<UploadResponseDTO>> getRequestsAfterDate(
 }
 
     @PutMapping("/{requestId}")
-    public ResponseEntity<GenericResponseDTO<String>> updateRequest(@PathVariable String requestId, @RequestParam RequestStatus status) {
+    public ResponseEntity<GenericResponseDTO<String>> updateRequest(@PathVariable String requestId, @RequestParam String status) {
         receiptService.updateRequestStatus(requestId, status);
 
         return new ResponseEntity<>(GenericResponseDTO.<String>builder().response("Updated successfully").build(), HttpStatus.OK);

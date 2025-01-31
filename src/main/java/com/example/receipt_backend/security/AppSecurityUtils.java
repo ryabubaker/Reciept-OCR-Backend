@@ -1,12 +1,7 @@
 package com.example.receipt_backend.security;
 
 import com.example.receipt_backend.entity.RoleEntity;
-import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.entity.common.AbstractGenericPrimaryKey;
-import com.example.receipt_backend.exception.BadRequestException;
-import com.example.receipt_backend.exception.ErrorCode;
-import com.example.receipt_backend.exception.ResourceNotFoundException;
-import com.example.receipt_backend.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -19,10 +14,8 @@ public class AppSecurityUtils {
 
     public static final String ROLE_DEFAULT = "ROLE_DEFAULT";
     
-    private static UserRepository userRepository;
 
-    public AppSecurityUtils(UserRepository userRepository) {
-        AppSecurityUtils.userRepository = userRepository;
+    public AppSecurityUtils() {
     }
 
     /**
@@ -99,14 +92,5 @@ public class AppSecurityUtils {
 
 
 
-    public static User getCurrentUser() {
-        if (SecurityContextHolder.getContext().getAuthentication() == null ||
-                !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
-            throw new BadRequestException("User is not authenticated.");
-        }
 
-        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_RECORD_NOT_FOUND.getMessage()));
-    }
 }

@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +36,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.example.receipt_backend.security.AppSecurityUtils.getCurrentUser;
+
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +49,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final FileStorageService s3Service;
     private final OcrService ocrService;
     private final WebSocketNotificationService notificationService;
+    private final UserRepository userRepository;
     private final UploadRequestRepository uploadRequestRepository;
     private final ReceiptTypeRepository receiptTypeRepository;
 
@@ -293,5 +295,15 @@ public class ReceiptServiceImpl implements ReceiptService {
                     ErrorCode.INVALID_FILE_TYPE.getMessage()
             );
         }
+    }
+    public  User getCurrentUser() {
+        if (SecurityContextHolder.getContext().getAuthentication() == null ||
+                !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+            throw new BadRequestException("User is not authenticated.");
+        }
+
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_RECORD_NOT_FOUND.getMessage()));
     }
 }

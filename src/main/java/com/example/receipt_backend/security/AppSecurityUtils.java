@@ -1,13 +1,11 @@
 package com.example.receipt_backend.security;
 
-import com.example.receipt_backend.config.multitenant.CurrentTenantIdentifierResolverImpl;
 import com.example.receipt_backend.entity.RoleEntity;
 import com.example.receipt_backend.entity.User;
 import com.example.receipt_backend.entity.common.AbstractGenericPrimaryKey;
 import com.example.receipt_backend.exception.BadRequestException;
 import com.example.receipt_backend.exception.ErrorCode;
 import com.example.receipt_backend.exception.ResourceNotFoundException;
-import com.example.receipt_backend.repository.TenantRepository;
 import com.example.receipt_backend.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,17 +14,14 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class AppSecurityUtils {
 
     public static final String ROLE_DEFAULT = "ROLE_DEFAULT";
     
-    private static TenantRepository tenantRepository;
     private static UserRepository userRepository;
 
-    public AppSecurityUtils(TenantRepository tenantRepository, UserRepository userRepository) {
-        AppSecurityUtils.tenantRepository = tenantRepository;
+    public AppSecurityUtils(UserRepository userRepository) {
         AppSecurityUtils.userRepository = userRepository;
     }
 
@@ -102,9 +97,7 @@ public class AppSecurityUtils {
         return false;
     }
 
-    public static UUID getCurrentTenantId() {
-        return tenantRepository.findByTenantName(CurrentTenantIdentifierResolverImpl.getTenant()).getTenantId();
-    }
+
 
     public static User getCurrentUser() {
         if (SecurityContextHolder.getContext().getAuthentication() == null ||

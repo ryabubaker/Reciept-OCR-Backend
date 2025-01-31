@@ -44,7 +44,7 @@ public interface ReceiptService {
     void deleteReceipts(List<UUID> receiptIds);
 
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     void updateReceiptsForApproval(List<UpdateReceiptDto> dtos);
 
     List<UploadResponseDTO> getRequestsAfterDate(LocalDateTime parsedDateTime);

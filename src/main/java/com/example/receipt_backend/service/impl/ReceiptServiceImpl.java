@@ -16,7 +16,6 @@ import com.example.receipt_backend.exception.ResourceNotFoundException;
 import com.example.receipt_backend.mapper.ReceiptMapper;
 import com.example.receipt_backend.mapper.UploadRequestMapper;
 import com.example.receipt_backend.repository.*;
-import com.example.receipt_backend.security.AppSecurityUtils;
 import com.example.receipt_backend.service.FileStorageService;
 import com.example.receipt_backend.service.OcrService;
 import com.example.receipt_backend.service.ReceiptService;
@@ -36,6 +35,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.example.receipt_backend.security.AppSecurityUtils.getCurrentUser;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -49,7 +50,6 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final WebSocketNotificationService notificationService;
     private final UploadRequestRepository uploadRequestRepository;
     private final ReceiptTypeRepository receiptTypeRepository;
-    private final UserRepository userRepository;
 
 
     @Transactional
@@ -126,7 +126,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         // 4) Mark the receipt as APPROVED
         receipt.setStatus(ReceiptStatus.APPROVED);
-        receipt.setApprovedBy(AppSecurityUtils.getCurrentUser());
+        receipt.setApprovedBy(getCurrentUser());
         receipt.setApprovedAt(LocalDateTime.now());
 
         // 5) Save
@@ -211,7 +211,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     ));
 
             // Update the receipt's status and OCR data
-            User user = userRepository.getReferenceById(UUID.fromString(updateReceiptDto.getApprovedBy()));
+            User user = getCurrentUser();
             receipt.setStatus(updateReceiptDto.getStatus());
             receipt.setOcrData(updateReceiptDto.getOcrData());
             receipt.setApprovedBy(user);

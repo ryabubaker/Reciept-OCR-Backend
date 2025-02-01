@@ -72,16 +72,22 @@ public class OcrServiceImpl implements OcrService {
             throw new BadRequestException("OCR service returned unsuccessful status.");
         }
 
+        // Convert OCR data keys from String to Integer
         HashMap<Integer, String> extractedData = ocrResponse.getData().stream()
                 .map(this::convertOcrResultToMap)
                 .flatMap(map -> map.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, HashMap::new));
+                .collect(Collectors.toMap(
+                        entry -> Integer.parseInt(entry.getKey().toString()),
+                        Map.Entry::getValue,
+                        (v1, v2) -> v1,
+                        HashMap::new));
 
         return ReceiptProcessingResult.builder()
                 .success(true)
                 .extractedData(extractedData)
                 .build();
     }
+
 
     /**
      * Handles the successful OCR processing by updating the receipt and saving it.

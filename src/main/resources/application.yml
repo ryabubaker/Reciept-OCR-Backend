@@ -135,4 +135,4 @@ myapp:
   jwtRefreshExpirationMs: 864000000
 
   ocr:
-    base-url: http://127.0.0.1:5000
+    base-url: http://ocr-env.eba-ka5q9pim.us-east-2.elasticbeanstalk.com
